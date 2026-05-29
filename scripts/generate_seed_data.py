@@ -1,0 +1,993 @@
+#!/usr/bin/env python3
+"""
+资格考试种子数据生成器
+生成40个热门考试的完整数据，输出为Dart可用的格式
+"""
+
+import json
+import os
+
+EXAMS = [
+    # ======================== 财会金融 (10) ========================
+    {
+        "id": 1, "name": "CPA", "full_name": "注册会计师全国统一考试",
+        "category": "准入类", "industry": "财会金融",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "中国注册会计师协会",
+        "official_website": "https://www.cicpa.org.cn",
+        "difficulty": 5, "gold_content": 5.0,
+        "description": "注册会计师是中国财会领域含金量最高的执业资格证书，也是唯一具有审计签字权的职业资格。持证人可在会计师事务所、企业财务、投行等领域执业。",
+        "eligibility": "具有高等专科以上学历，或具有会计及相关专业中级以上技术职称。应届毕业生可报考，无工作经验要求。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "会计", "format": "机考", "duration": 180},
+            {"name": "审计", "format": "机考", "duration": 150},
+            {"name": "财务成本管理", "format": "机考", "duration": 150},
+            {"name": "经济法", "format": "机考", "duration": 120},
+            {"name": "税法", "format": "机考", "duration": 120},
+            {"name": "公司战略与风险管理", "format": "机考", "duration": 120},
+            {"name": "综合阶段-职业能力综合测试", "format": "机考", "duration": 210},
+        ],
+        "tags": ["财会第一证", "签字权", "高薪", "难度极高"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年4月", "is_estimated": True},
+            {"event_type": "signup_end", "period_desc": "每年4月底", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年8月下旬(专业阶段)", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年8月下旬(综合阶段)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年11月下旬", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 2, "name": "税务师", "full_name": "税务师职业资格考试",
+        "category": "水平评价类", "industry": "财会金融",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "中国注册税务师协会",
+        "official_website": "https://www.cctaa.cn",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "税务师是涉税服务领域的专业资格证书，从事税务代理、税务咨询、税务筹划等业务的必备证书。",
+        "eligibility": "取得经济学、法学、管理学学科门类大学本科及以上学历；或取得其他学科门类大学本科学历，从事相关工作满1年。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "税法(一)", "format": "机考", "duration": 150},
+            {"name": "税法(二)", "format": "机考", "duration": 150},
+            {"name": "涉税服务实务", "format": "机考", "duration": 150},
+            {"name": "涉税服务相关法律", "format": "机考", "duration": 150},
+            {"name": "财务与会计", "format": "机考", "duration": 150},
+        ],
+        "tags": ["税务", "涉税服务", "财税"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年5月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后1个月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 3, "name": "中级会计", "full_name": "全国会计专业技术中级资格考试",
+        "category": "水平评价类", "industry": "财会金融",
+        "target_groups": ["职场1-3年", "职场3-5年+"],
+        "organizing_body": "财政部会计财务评价中心",
+        "official_website": "https://kzp.mof.gov.cn",
+        "difficulty": 3, "gold_content": 3.5,
+        "description": "中级会计职称是企业财务岗位晋升的核心证书，也是担任财务经理、财务主管等管理岗位的重要依据。",
+        "eligibility": "大专学历从事会计工作满5年；本科学历满4年；双学士或研究生班毕业满2年；硕士满1年；博士无年限要求。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "中级会计实务", "format": "机考", "duration": 165},
+            {"name": "财务管理", "format": "机考", "duration": 135},
+            {"name": "经济法", "format": "机考", "duration": 120},
+        ],
+        "tags": ["会计职称", "财务主管", "晋升必备"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年6月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年9月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年10月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 4, "name": "初级会计", "full_name": "全国会计专业技术初级资格考试",
+        "category": "水平评价类", "industry": "财会金融",
+        "target_groups": ["在校生", "应届"],
+        "organizing_body": "财政部会计财务评价中心",
+        "official_website": "https://kzp.mof.gov.cn",
+        "difficulty": 2, "gold_content": 2.5,
+        "description": "初级会计职称是财会行业的入门级证书，适合在校学生和刚入行的财务人员，是进入会计岗位的基础门槛。",
+        "eligibility": "具备国家教育部门认可的高中毕业及以上学历。无工作经验要求，在校生可报考。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "初级会计实务", "format": "机考", "duration": 105},
+            {"name": "经济法基础", "format": "机考", "duration": 75},
+        ],
+        "tags": ["会计入门", "门槛低", "学生友好"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年1月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年5月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年6月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 5, "name": "资产评估师", "full_name": "资产评估师职业资格考试",
+        "category": "水平评价类", "industry": "财会金融",
+        "target_groups": ["应届", "职场1-3年"],
+        "organizing_body": "中国资产评估协会",
+        "official_website": "https://www.cas.org.cn",
+        "difficulty": 3, "gold_content": 3.0,
+        "description": "资产评估师从事资产评估业务的专业资格，服务于企业并购、资产重组、抵押贷款等经济活动中资产价值的评定估算。",
+        "eligibility": "具有高等院校专科以上学历。暂未取得学历的应届生可持学生证等有效证件报名。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "资产评估基础", "format": "机考", "duration": 150},
+            {"name": "资产评估相关知识", "format": "机考", "duration": 150},
+            {"name": "资产评估实务(一)", "format": "机考", "duration": 150},
+            {"name": "资产评估实务(二)", "format": "机考", "duration": 150},
+        ],
+        "tags": ["资产评估", "并购"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年3-5月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年9月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年10月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 6, "name": "CFA", "full_name": "特许金融分析师",
+        "category": "国际认证", "industry": "财会金融",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "CFA Institute",
+        "official_website": "https://www.cfainstitute.org",
+        "difficulty": 5, "gold_content": 5.0,
+        "description": "CFA是全球金融投资领域最具权威性的资格认证，被誉为金融界的黄金标准。持证人主要从事投资分析、资产管理、风险管理等工作。",
+        "eligibility": "拥有学士学位或同等学历；或在读本科生距离毕业前23个月内可报名一级；或拥有4年相关工作经验。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "道德与职业准则", "format": "机考", "duration": 270},
+            {"name": "定量分析", "format": "机考", "duration": 270},
+            {"name": "经济学", "format": "机考", "duration": 270},
+            {"name": "财务报表分析", "format": "机考", "duration": 270},
+            {"name": "企业金融", "format": "机考", "duration": 270},
+            {"name": "权益投资", "format": "机考", "duration": 270},
+            {"name": "固定收益", "format": "机考", "duration": 270},
+            {"name": "衍生品", "format": "机考", "duration": 270},
+            {"name": "另类投资", "format": "机考", "duration": 270},
+            {"name": "投资组合管理", "format": "机考", "duration": 270},
+        ],
+        "tags": ["金融黄金标准", "全球认可", "高薪", "全英文"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "一级:2/5/8/11月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "二级:5/8/11月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "三级:2/8月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约60天", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 7, "name": "FRM", "full_name": "金融风险管理师",
+        "category": "国际认证", "industry": "财会金融",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "GARP (Global Association of Risk Professionals)",
+        "official_website": "https://www.garp.org/frm",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "FRM是全球金融风险管理领域的权威认证，专注于识别、分析和管理金融风险。持证人主要在银行、基金、保险等金融机构的风险管理部门工作。",
+        "eligibility": "无学历限制。通过两级考试并在5年内积累2年相关工作经验即可持证。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "风险管理基础", "format": "机考", "duration": 240},
+            {"name": "定量分析", "format": "机考", "duration": 240},
+            {"name": "金融市场与产品", "format": "机考", "duration": 240},
+            {"name": "估值与风险模型", "format": "机考", "duration": 240},
+            {"name": "市场风险", "format": "机考", "duration": 240},
+            {"name": "信用风险", "format": "机考", "duration": 240},
+            {"name": "操作风险与弹性", "format": "机考", "duration": 240},
+            {"name": "风险管理与投资管理", "format": "机考", "duration": 240},
+            {"name": "当前金融市场热点", "format": "机考", "duration": 240},
+        ],
+        "tags": ["风险管理", "银行", "金融科技"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "考前3个月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "一级:5/8/11月 二级:5/8/11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约45天", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 8, "name": "ACCA", "full_name": "国际注册会计师",
+        "category": "国际认证", "industry": "财会金融",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "ACCA (特许公认会计师公会)",
+        "official_website": "https://www.accaglobal.com",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "ACCA是全球最具规模的国际专业会计师组织颁发的资格证书，采用国际会计准则，在全球180多个国家得到认可。",
+        "eligibility": "具备大专以上学历即可注册；本科在校生大二及以上可注册；高中毕业可通过FIA路径先考前三门再转入ACCA。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "商业与技术", "format": "机考", "duration": 120},
+            {"name": "管理会计", "format": "机考", "duration": 120},
+            {"name": "财务会计", "format": "机考", "duration": 120},
+            {"name": "公司法与商法", "format": "机考", "duration": 120},
+            {"name": "业绩管理", "format": "机考", "duration": 195},
+            {"name": "税务", "format": "机考", "duration": 195},
+            {"name": "财务报告", "format": "机考", "duration": 195},
+            {"name": "审计与鉴证", "format": "机考", "duration": 195},
+            {"name": "财务管理", "format": "机考", "duration": 195},
+            {"name": "战略商业领袖", "format": "机考", "duration": 240},
+            {"name": "战略商业报告", "format": "机考", "duration": 195},
+            {"name": "高级财务管理/高级业绩管理/高级税务/高级审计(选二)", "format": "机考", "duration": 195},
+        ],
+        "tags": ["国际认可", "英文考试", "学生可考"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "3/6/9/12月(季考)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约6周", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 9, "name": "证券从业", "full_name": "证券行业专业人员水平评价测试",
+        "category": "准入类", "industry": "财会金融",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "中国证券业协会",
+        "official_website": "https://www.sac.net.cn",
+        "difficulty": 2, "gold_content": 2.5,
+        "description": "证券从业资格是进入证券行业的入门级证书，从事证券经纪、投资咨询、证券承销等业务的基础门槛。",
+        "eligibility": "年满18周岁，具有高中以上文化程度和完全民事行为能力。门槛较低，是金融行业入门首选。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "证券市场基本法律法规", "format": "机考", "duration": 120},
+            {"name": "金融市场基础知识", "format": "机考", "duration": 120},
+        ],
+        "tags": ["金融入门", "门槛低", "证券行业"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "每年多次，不定期举办", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约7个工作日", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 10, "name": "基金从业", "full_name": "基金从业人员资格考试",
+        "category": "准入类", "industry": "财会金融",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "中国证券投资基金业协会",
+        "official_website": "https://www.amac.org.cn",
+        "difficulty": 2, "gold_content": 2.5,
+        "description": "基金从业资格是从事基金销售、基金管理、基金托管等业务的必备证书，是公募基金和私募基金行业的基本门槛。",
+        "eligibility": "年满18周岁，具有高中以上文化程度。门槛较低，适合金融行业入门者。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "基金法律法规", "format": "机考", "duration": 120},
+            {"name": "证券投资基金基础知识", "format": "机考", "duration": 120},
+            {"name": "私募股权投资基金基础知识(选考)", "format": "机考", "duration": 120},
+        ],
+        "tags": ["金融入门", "基金", "门槛低"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "每年3/6/9/11月举行", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约7个工作日", "is_estimated": True},
+        ]
+    },
+    # ======================== 法律 (4) ========================
+    {
+        "id": 11, "name": "法考", "full_name": "国家统一法律职业资格考试",
+        "category": "准入类", "industry": "法律",
+        "target_groups": ["应届", "职场1-3年"],
+        "organizing_body": "司法部",
+        "official_website": "https://www.moj.gov.cn",
+        "difficulty": 5, "gold_content": 5.0,
+        "description": "法律职业资格考试是中国法律行业的核心准入证书，是担任法官、检察官、律师、公证员等法律职业的必备条件。以通过率低、难度大而著称。",
+        "eligibility": "具备全日制普通高等学校法学类本科学历并获得学士及以上学位；或全日制普通高等学校非法学类本科及以上学历并获得法律硕士、法学硕士及以上学位；或全日制普通高等学校非法学类本科及以上学历并获得相应学位且从事法律工作满三年。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "客观题考试(试卷一):法治思想/法理学/宪法/中国法律史/国际法/司法制度/刑法/刑事诉讼法/行政法", "format": "机考", "duration": 180},
+            {"name": "客观题考试(试卷二):民法/知识产权法/商法/经济法/环境资源法/劳动与社会保障法/国际私法/国际经济法/民事诉讼法", "format": "机考", "duration": 180},
+            {"name": "主观题考试:论述+案例分析", "format": "机考", "duration": 240},
+        ],
+        "tags": ["法律第一考", "极难", "刚需证书", "高薪"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年6月(客观题)", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年8-9月(客观题)", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年10月(主观题)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年9月(客观题)/11月(主观题)", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 12, "name": "专利代理人", "full_name": "专利代理师资格考试",
+        "category": "准入类", "industry": "法律",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "国家知识产权局",
+        "official_website": "https://www.cnipa.gov.cn",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "专利代理师是从事专利申请、专利代理等知识产权服务的专业资格，在科技创新日益重要的当下含金量持续走高。",
+        "eligibility": "具有高等院校理工科专业专科以上学历。文科背景不可报考(为数不多的专业限制证书)。",
+        "exam_format": "笔试+机考",
+        "subjects": [
+            {"name": "专利法律知识", "format": "机考", "duration": 120},
+            {"name": "相关法律知识", "format": "机考", "duration": 120},
+            {"name": "专利代理实务", "format": "笔试", "duration": 240},
+        ],
+        "tags": ["知识产权", "理工科", "高薪小众"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年5-6月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年7月第一个周末", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年9月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 13, "name": "企业合规师", "full_name": "企业合规师职业能力水平考试",
+        "category": "水平评价类", "industry": "法律",
+        "target_groups": ["职场1-3年", "职场3-5年+"],
+        "organizing_body": "中国企业评价协会",
+        "official_website": "https://www.ceeac.org.cn",
+        "difficulty": 3, "gold_content": 3.0,
+        "description": "企业合规师是近年来新兴的职业资格，服务于企业合规管理体系建设，是企业法务、风控、审计人员的新方向。",
+        "eligibility": "初级:高中及以上学历；中级:大专及以上学历+1年工作经验；高级:本科及以上+3年工作经验。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "企业合规基础理论", "format": "机考", "duration": 120},
+            {"name": "企业合规管理实务", "format": "机考", "duration": 120},
+        ],
+        "tags": ["合规", "新兴证书", "企业法务"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "每年6月和12月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后30天", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 14, "name": "法律英语LEC", "full_name": "法律英语证书考试",
+        "category": "水平评价类", "industry": "法律",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "法律英语证书全国统一考试指导委员会",
+        "official_website": "https://www.lectest.com",
+        "difficulty": 3, "gold_content": 2.5,
+        "description": "LEC是国内唯一的法律英语水平认证考试，测试应试者的法律英语综合应用能力，对涉外律师、法务等方向有加分作用。",
+        "eligibility": "无特殊学历和年龄限制。对法律英语有兴趣者均可报考。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "法律英语综合", "format": "笔试", "duration": 180},
+        ],
+        "tags": ["法律英语", "涉外", "加分项"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "每年5月和11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约60天", "is_estimated": True},
+        ]
+    },
+    # ======================== 建筑地产 (8) ========================
+    {
+        "id": 15, "name": "一级建造师", "full_name": "一级建造师执业资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场3-5年+"],
+        "organizing_body": "住房和城乡建设部",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 4, "gold_content": 4.5,
+        "description": "一级建造师是担任大中型建设工程项目施工项目负责人的必备执业资格，是建筑行业项目经理的标配证书。",
+        "eligibility": "工程类或工程经济类大专学历工作满6年(其中项目施工管理满4年)；本科学历工作满4年(管理满3年)；双学士/研究生班满3年(管理满2年)；硕士满2年(管理满1年)；博士满1年。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "建设工程经济", "format": "笔试", "duration": 120},
+            {"name": "建设工程法规及相关知识", "format": "笔试", "duration": 120},
+            {"name": "建设工程项目管理", "format": "笔试", "duration": 120},
+            {"name": "专业工程管理与实务(10个专业选一)", "format": "笔试", "duration": 240},
+        ],
+        "tags": ["项目经理必备", "挂靠价值高", "经验门槛高"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年7月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年9月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年12月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 16, "name": "二级建造师", "full_name": "二级建造师执业资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场1-3年", "职场3-5年+"],
+        "organizing_body": "各省住建厅",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 3, "gold_content": 3.5,
+        "description": "二级建造师是担任中小型建设工程项目施工项目负责人的执业资格，是一级建造师的基础版，考试难度和报名门槛相对较低。",
+        "eligibility": "工程类或工程经济类中专以上学历并从事建设工程项目施工管理工作满2年。各省具体要求略有差异。",
+        "exam_format": "笔试(部分省机考)",
+        "subjects": [
+            {"name": "建设工程施工管理", "format": "笔试", "duration": 120},
+            {"name": "建设工程法规及相关知识", "format": "笔试", "duration": 120},
+            {"name": "专业工程管理与实务(6个专业选一)", "format": "笔试", "duration": 180},
+        ],
+        "tags": ["入门建造师", "省份差异", "性价比高"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "各省不同，一般为1-3月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "各省不同，一般为5-6月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后2-3个月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 17, "name": "注册建筑师", "full_name": "一级注册建筑师资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场3-5年+"],
+        "organizing_body": "住房和城乡建设部",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 5, "gold_content": 4.5,
+        "description": "一级注册建筑师是建筑设计行业最高级别的执业资格，拥有建筑设计图纸的签字权，是建筑设计院的核心资质。",
+        "eligibility": "建筑学硕士或以上+2年工作经验；建筑学学士+3年；建筑学本科+5年；相近专业本科+7年；大专+9年。要求严格的工作年限。",
+        "exam_format": "笔试+作图",
+        "subjects": [
+            {"name": "建筑设计", "format": "作图", "duration": 360},
+            {"name": "建筑结构", "format": "笔试", "duration": 120},
+            {"name": "建筑物理与设备", "format": "笔试", "duration": 120},
+            {"name": "建筑材料与构造", "format": "笔试", "duration": 120},
+            {"name": "建筑经济/施工与设计业务管理", "format": "笔试", "duration": 120},
+            {"name": "建筑方案设计(作图)", "format": "作图", "duration": 360},
+        ],
+        "tags": ["建筑设计", "极难", "签字权"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年2-3月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年5月(两个周末)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年9月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 18, "name": "监理工程师", "full_name": "监理工程师职业资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场3-5年+"],
+        "organizing_body": "住房和城乡建设部/交通运输部/水利部",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 3, "gold_content": 3.5,
+        "description": "监理工程师是从事建设工程监理工作的专业技术人员执业资格，对工程质量和安全负有监理责任。",
+        "eligibility": "具有各工程大类专业大学专科学历工作满6年(其中监理满4年)；本科学历工作满4年(监理满3年)；硕士满2年(监理满1年)；博士无年限。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "建设工程监理基本理论和相关法规", "format": "笔试", "duration": 120},
+            {"name": "建设工程合同管理", "format": "笔试", "duration": 120},
+            {"name": "建设工程目标控制", "format": "笔试", "duration": 180},
+            {"name": "建设工程监理案例分析", "format": "笔试", "duration": 240},
+        ],
+        "tags": ["工程监理", "质量安全"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年3月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年5月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年7月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 19, "name": "一级造价工程师", "full_name": "一级造价工程师职业资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场3-5年+"],
+        "organizing_body": "住房和城乡建设部",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "一级造价工程师是建设工程造价管理的核心执业资格，负责工程投资估算、设计概算、施工图预算、竣工决算等全过程造价管理。",
+        "eligibility": "工程造价专业大专工作满5年；土木建筑/水利等大类大专满6年；工程造价本科满4年；工学/管理学/经济学本科满5年；硕士满2年；博士无年限。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "建设工程造价管理", "format": "笔试", "duration": 150},
+            {"name": "建设工程计价", "format": "笔试", "duration": 150},
+            {"name": "建设工程技术与计量(4个专业选一)", "format": "笔试", "duration": 150},
+            {"name": "建设工程造价案例分析", "format": "笔试", "duration": 240},
+        ],
+        "tags": ["工程造价", "成本控制"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年7-8月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年10月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年12月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 20, "name": "消防工程师", "full_name": "一级注册消防工程师资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场1-3年", "职场3-5年+"],
+        "organizing_body": "应急管理部",
+        "official_website": "https://www.mem.gov.cn",
+        "difficulty": 4, "gold_content": 3.5,
+        "description": "一级注册消防工程师是消防安全领域的核心专业资格，负责消防设施设计、检测、维保和消防安全评估。",
+        "eligibility": "消防工程专业大专工作满6年(消防满4年)；相关专业大专满7年(消防满5年)；消防工程本科满4年(消防满3年)；相关专业本科满5年(消防满4年)；硕士满2年(消防满1年)；博士满1年。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "消防安全技术实务", "format": "笔试", "duration": 150},
+            {"name": "消防安全技术综合能力", "format": "笔试", "duration": 150},
+            {"name": "消防安全案例分析", "format": "笔试", "duration": 180},
+        ],
+        "tags": ["消防安全", "刚需"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年8-9月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "次年2月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 21, "name": "注册结构工程师", "full_name": "一级注册结构工程师执业资格考试",
+        "category": "准入类", "industry": "建筑地产",
+        "target_groups": ["职场3-5年+"],
+        "organizing_body": "住房和城乡建设部",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 5, "gold_content": 4.5,
+        "description": "一级注册结构工程师是结构设计领域的顶级执业资格，负责建筑结构的计算、分析和设计，对结构安全负有法律责任。考试难度极大，通过率非常低。",
+        "eligibility": "本专业(结构工程等)本科工作满5年(设计满4年)；相近专业本科满6年(设计满4年)；本专业硕士满3年；博士满2年。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "基础考试(上):数学/物理/化学/理论力学/材料力学/流体力学", "format": "笔试", "duration": 240},
+            {"name": "基础考试(下):电气/计算机/工程经济/土木工程材料/结构力学/土力学/工程测量/施工管理/结构设计/结构试验/职业法规", "format": "笔试", "duration": 240},
+            {"name": "专业考试(上):各类结构设计", "format": "笔试", "duration": 240},
+            {"name": "专业考试(下):各类结构设计", "format": "笔试", "duration": 240},
+        ],
+        "tags": ["结构设计", "极难", "签字权"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年6-7月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年10-11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "次年1月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 22, "name": "房地产估价师", "full_name": "房地产估价师职业资格考试",
+        "category": "水平评价类", "industry": "建筑地产",
+        "target_groups": ["职场1-3年", "职场3-5年+"],
+        "organizing_body": "住房和城乡建设部/自然资源部",
+        "official_website": "https://www.mohurd.gov.cn",
+        "difficulty": 3, "gold_content": 3.0,
+        "description": "房地产估价师是从事房地产估价活动的专业技术人员，服务于房地产交易、抵押贷款、征收补偿、司法鉴定等场景。",
+        "eligibility": "具有高等院校专科以上学历。相关专业毕业或有一定从业经验者更具优势。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "房地产估价原理与方法", "format": "机考", "duration": 150},
+            {"name": "房地产估价法规与政策", "format": "机考", "duration": 150},
+            {"name": "房地产估价实务与案例", "format": "机考", "duration": 150},
+        ],
+        "tags": ["房地产", "估价", "金融"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年6-7月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年10月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年12月", "is_estimated": True},
+        ]
+    },
+    # ======================== 医疗健康 (5) ========================
+    {
+        "id": 23, "name": "执业医师", "full_name": "国家医师资格考试",
+        "category": "准入类", "industry": "医疗健康",
+        "target_groups": ["应届", "职场1-3年"],
+        "organizing_body": "国家卫生健康委员会",
+        "official_website": "https://www.nhc.gov.cn",
+        "difficulty": 4, "gold_content": 5.0,
+        "description": "执业医师资格是从事医疗工作的核心准入证书，是成为合法执业医生的必要条件。没有此证不能行医，属于刚性需求。",
+        "eligibility": "具有高等学校医学专业本科以上学历，在执业医师指导下试用期满一年；或取得执业助理医师执业证书后，具有高等学校医学专科学历工作满二年；具有中等专业学校医学专业学历工作满五年。",
+        "exam_format": "机考+实操",
+        "subjects": [
+            {"name": "实践技能考试", "format": "实操", "duration": 60},
+            {"name": "医学综合笔试(执业医师)", "format": "机考", "duration": 300},
+        ],
+        "tags": ["医生必备", "刚需", "生命相关"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年1月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年6月(实践技能)", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年8月(综合笔试)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "实践技能当场公布/笔试考后1月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 24, "name": "执业药师", "full_name": "执业药师职业资格考试",
+        "category": "准入类", "industry": "医疗健康",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "国家药品监督管理局",
+        "official_website": "https://www.nmpa.gov.cn",
+        "difficulty": 4, "gold_content": 3.5,
+        "description": "执业药师是从事药品生产、经营、使用和其他需要提供药学服务的单位中的药学技术专业人员。药品经营企业必须配备执业药师。",
+        "eligibility": "药学类/中药学类专业大专工作满5年；本科工作满3年；硕士工作满1年；博士无年限。相关专业相应增加1年。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "药学专业知识(一)/(中药学专业知识一)", "format": "笔试", "duration": 150},
+            {"name": "药学专业知识(二)/(中药学专业知识二)", "format": "笔试", "duration": 150},
+            {"name": "药事管理与法规", "format": "笔试", "duration": 150},
+            {"name": "药学综合知识与技能/(中药学综合知识与技能)", "format": "笔试", "duration": 150},
+        ],
+        "tags": ["药品", "药店必备", "药学"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年7-8月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年10月底", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年12月底", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 25, "name": "护士执业", "full_name": "护士执业资格考试",
+        "category": "准入类", "industry": "医疗健康",
+        "target_groups": ["在校生", "应届"],
+        "organizing_body": "国家卫生健康委员会",
+        "official_website": "https://www.nhc.gov.cn",
+        "difficulty": 3, "gold_content": 3.5,
+        "description": "护士执业资格是从事护理工作的核心准入证书，是所有注册护士必须持有的执业资格。",
+        "eligibility": "在中等职业学校或高等学校完成国务院教育主管部门规定的普通全日制3年以上的护理、助产专业课程学习，并取得相应学历证书。在教学/综合医院完成8个月以上护理临床实习。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "专业实务", "format": "机考", "duration": 120},
+            {"name": "实践能力", "format": "机考", "duration": 120},
+        ],
+        "tags": ["护理必备", "刚需", "护士"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年12月-1月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年4-5月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后45个工作日", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 26, "name": "执业兽医", "full_name": "全国执业兽医资格考试",
+        "category": "准入类", "industry": "医疗健康",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "农业农村部",
+        "official_website": "https://www.moa.gov.cn",
+        "difficulty": 3, "gold_content": 3.0,
+        "description": "执业兽医资格是从事动物诊疗活动的核心准入证书，是开设宠物医院、从事兽医工作的必备条件。",
+        "eligibility": "具有兽医、畜牧兽医、中兽医或水产养殖专业大学专科以上学历。在校生可用学生证报考。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "基础科目", "format": "机考", "duration": 120},
+            {"name": "预防科目", "format": "机考", "duration": 120},
+            {"name": "临床科目", "format": "机考", "duration": 120},
+            {"name": "综合应用科目", "format": "机考", "duration": 120},
+        ],
+        "tags": ["兽医", "宠物", "小众刚需"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年5-7月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年7-9月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后1-2个月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 27, "name": "健康管理师", "full_name": "健康管理师职业技能等级认定",
+        "category": "技能等级认定", "industry": "医疗健康",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "各省人社部门认定机构",
+        "official_website": "https://www.mohrss.gov.cn",
+        "difficulty": 2, "gold_content": 2.5,
+        "description": "健康管理师是从事个体或群体健康监测、分析、评估以及健康咨询、指导和危险因素干预等工作的专业人员，随着大健康产业发展需求持续增长。",
+        "eligibility": "具有医药卫生专业大专以上学历；非医药卫生专业大专以上+连续从事本职业2年以上+培训达标；医药卫生专业中专以上+连续从事本职业3年以上+培训达标。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "理论知识", "format": "机考", "duration": 120},
+            {"name": "专业能力考核", "format": "机考", "duration": 120},
+        ],
+        "tags": ["大健康", "新兴职业", "门槛适中"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "各省不同，一般每年2次", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后30-45天", "is_estimated": True},
+        ]
+    },
+    # ======================== 教育培训 (4) ========================
+    {
+        "id": 28, "name": "教师资格证", "full_name": "中小学教师资格考试",
+        "category": "准入类", "industry": "教育培训",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "教育部",
+        "official_website": "https://ntce.neea.edu.cn",
+        "difficulty": 3, "gold_content": 3.5,
+        "description": "教师资格证是从事中小学和幼儿园教师工作的核心准入证书，是成为编制内教师的必备条件。近年来报考人数持续攀升，热度极高。",
+        "eligibility": "幼儿园:幼儿师范学校毕业及以上；小学:中等师范学校毕业及以上；初中:高等师范专科或大学专科及以上；高中/中职:高等师范本科或大学本科及以上。在校生大三及以上可报考。",
+        "exam_format": "笔试+面试",
+        "subjects": [
+            {"name": "综合素质", "format": "笔试", "duration": 120},
+            {"name": "教育知识与能力(中学)/教育教学知识与能力(小学)/保教知识与能力(幼儿园)", "format": "笔试", "duration": 120},
+            {"name": "学科知识与教学能力(中学)", "format": "笔试", "duration": 120},
+            {"name": "面试:结构化+试讲+答辩", "format": "面试", "duration": 20},
+        ],
+        "tags": ["教师必备", "热门", "编制敲门砖"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "上半年1月/下半年9月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "上半年3月(笔试)/5月(面试)", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "下半年10月底(笔试)/次年1月(面试)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后1个月左右", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 29, "name": "普通话水平测试", "full_name": "普通话水平测试(PSC)",
+        "category": "水平评价类", "industry": "教育培训",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "国家语言文字工作委员会",
+        "official_website": "https://www.china-language.edu.cn",
+        "difficulty": 1, "gold_content": 2.0,
+        "description": "普通话水平测试是考察普通话规范程度和熟练程度的口语考试，是教师、播音员、主持人等职业的必备条件。",
+        "eligibility": "无特殊条件，均可报名参加。教师一般要求二级乙等以上，语文教师要求二级甲等以上。",
+        "exam_format": "机测(口语)",
+        "subjects": [
+            {"name": "读单音节字词", "format": "口语机测", "duration": 4},
+            {"name": "读多音节词语", "format": "口语机测", "duration": 4},
+            {"name": "朗读短文", "format": "口语机测", "duration": 4},
+            {"name": "命题说话", "format": "口语机测", "duration": 3},
+        ],
+        "tags": ["教师必备", "口语测试", "简单"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "各地测试站不定期安排，一般每月均有", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后1-3个月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 30, "name": "国际中文教师", "full_name": "国际中文教师证书考试(CTCSOL)",
+        "category": "水平评价类", "industry": "教育培训",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "教育部中外语言交流合作中心",
+        "official_website": "https://www.chineseteacher.org.cn",
+        "difficulty": 3, "gold_content": 3.0,
+        "description": "CTCSOL是从事国际中文教育工作的能力认证，是孔子学院和海外中文教学机构招聘教师的重要参考。",
+        "eligibility": "具有大学本科以上学历(含应届毕业生)；普通话水平达到二级甲等及以上；具有一定的外语水平。",
+        "exam_format": "笔试+面试",
+        "subjects": [
+            {"name": "基础知识笔试", "format": "笔试", "duration": 150},
+            {"name": "应用能力笔试", "format": "笔试", "duration": 150},
+            {"name": "面试:说课+试讲+问答", "format": "面试", "duration": 25},
+        ],
+        "tags": ["对外汉语", "国际", "孔子学院"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "每年4月(笔试)/7月(面试)/10月(笔试)/12月(面试)", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约20个工作日", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 31, "name": "心理咨询师", "full_name": "心理咨询师基础培训合格证书",
+        "category": "技能等级认定", "industry": "教育培训",
+        "target_groups": ["应届", "职场1-3年"],
+        "organizing_body": "中国科学院心理研究所",
+        "official_website": "https://www.psych.ac.cn",
+        "difficulty": 2, "gold_content": 2.5,
+        "description": "自国家心理咨询师职业资格取消后，中科院心理所的心理咨询师基础培训是目前社会认可度较高的替代证书，适合想进入心理咨询行业的新人。注意:此证书非国家职业资格，需留意职业资格改革动态。",
+        "eligibility": "具有大专以上学历(不限专业)。大学本科大三及以上在读学生可凭学生证报考。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "基础理论", "format": "笔试", "duration": 150},
+            {"name": "操作技能", "format": "笔试", "duration": 150},
+        ],
+        "tags": ["心理咨询", "非职业资格", "新兴"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "每年5月和11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后30天", "is_estimated": True},
+        ]
+    },
+    # ======================== IT互联网 (5) ========================
+    {
+        "id": 32, "name": "软考", "full_name": "计算机技术与软件专业技术资格(水平)考试",
+        "category": "水平评价类", "industry": "IT互联网",
+        "target_groups": ["在校生", "应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "工业和信息化部/人力资源社会保障部",
+        "official_website": "https://www.ruankao.org.cn",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "软考是计算机专业领域含金量最高的国家专业技术资格考试，兼具职业资格和职称双重属性，以考代评，证书直接对应工程师/高级工程师职称。",
+        "eligibility": "无学历和年龄限制。任何人都可报考任何级别。初级/中级直接报考，高级需通过相应科目。",
+        "exam_format": "笔试(部分机考)",
+        "subjects": [
+            {"name": "系统架构设计师(高级)", "format": "笔试", "duration": 150},
+            {"name": "信息系统项目管理师(高级)", "format": "笔试", "duration": 150},
+            {"name": "软件设计师(中级)", "format": "笔试", "duration": 150},
+            {"name": "网络工程师(中级)", "format": "笔试", "duration": 150},
+            {"name": "数据库系统工程师(中级)", "format": "笔试", "duration": 150},
+            {"name": "程序员(初级)", "format": "笔试", "duration": 150},
+        ],
+        "tags": ["职称", "以考代评", "IT必备"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "上半年3月/下半年8月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "上半年5月/下半年11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约45天", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 33, "name": "华为认证", "full_name": "华为技术认证(HCIA/HCIP/HCIE)",
+        "category": "企业认证", "industry": "IT互联网",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "华为技术有限公司",
+        "official_website": "https://e.huawei.com/cn/talent/certification",
+        "difficulty": 4, "gold_content": 3.5,
+        "description": "华为认证是全球ICT领域最具影响力的厂商认证之一，分为HCIA(初级)、HCIP(中级)、HCIE(专家级)三个级别，涵盖数通、安全、云计算等多个方向。",
+        "eligibility": "无学历和年龄限制。HCIA/HCIP无前置要求。HCIE需先通过笔试再参加LAB实验考试。",
+        "exam_format": "机考+实验",
+        "subjects": [
+            {"name": "笔试(各方向)", "format": "机考", "duration": 90},
+            {"name": "LAB实验(HCIE)", "format": "机考实操", "duration": 480},
+        ],
+        "tags": ["ICT", "华为", "网络"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "全年可约考(笔试)/HCIE LAB需预约", "is_estimated": True},
+            {"event_type": "score", "period_desc": "当场出分(笔试)", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 34, "name": "阿里云认证", "full_name": "阿里云认证(ACA/ACP/ACE)",
+        "category": "企业认证", "industry": "IT互联网",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "阿里云计算有限公司",
+        "official_website": "https://www.aliyun.com/training/certification",
+        "difficulty": 3, "gold_content": 3.0,
+        "description": "阿里云认证是云计算领域认可度较高的厂商认证，分为ACA(助理)、ACP(专业)、ACE(专家)三个级别，是国内云计算市场的领先认证。",
+        "eligibility": "无学历限制。ACA无前置要求；ACP建议有一定工作经验；ACE需先通过ACP。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "云计算/大数据/安全等方向", "format": "机考", "duration": 120},
+        ],
+        "tags": ["云计算", "阿里云", "互联网"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "全年可约考", "is_estimated": True},
+            {"event_type": "score", "period_desc": "当场出分", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 35, "name": "AWS认证", "full_name": "AWS Certified认证",
+        "category": "企业认证", "industry": "IT互联网",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "Amazon Web Services",
+        "official_website": "https://aws.amazon.com/cn/certification/",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "AWS认证是全球云计算领域最具权威性的厂商认证，在全球范围内被广泛认可，是云计算架构师和工程师的核心资质证明。",
+        "eligibility": "无学历和年龄限制。建议有6个月以上AWS实践经验。Solutions Architect Associate是最受欢迎的入门级别。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "Solutions Architect Associate", "format": "机考", "duration": 130},
+            {"name": "Solutions Architect Professional", "format": "机考", "duration": 180},
+            {"name": "Developer Associate", "format": "机考", "duration": 130},
+            {"name": "SysOps Administrator Associate", "format": "机考", "duration": 130},
+        ],
+        "tags": ["云计算", "AWS", "全球认可"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "全年可约考", "is_estimated": True},
+            {"event_type": "score", "period_desc": "当场出分", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 36, "name": "CISSP", "full_name": "注册信息系统安全师",
+        "category": "国际认证", "industry": "IT互联网",
+        "target_groups": ["职场3-5年+"],
+        "organizing_body": "(ISC)² (International Information System Security Certification Consortium)",
+        "official_website": "https://www.isc2.org/certifications/cissp",
+        "difficulty": 5, "gold_content": 4.5,
+        "description": "CISSP是全球信息安全领域最权威的认证，被誉为信息安全领域的金牌标准，是安全顾问、安全分析师、安全经理等岗位的顶级资质。",
+        "eligibility": "在CISSP CBK八大领域中的至少两个领域具有5年以上工作经验。本科学历可减免1年。通过考试后需获得(ISC)²会员背书。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "安全与风险管理", "format": "机考", "duration": 360},
+            {"name": "资产安全", "format": "机考", "duration": 360},
+            {"name": "安全架构与工程", "format": "机考", "duration": 360},
+            {"name": "通信与网络安全", "format": "机考", "duration": 360},
+            {"name": "身份与访问管理", "format": "机考", "duration": 360},
+            {"name": "安全评估与测试", "format": "机考", "duration": 360},
+            {"name": "安全运营", "format": "机考", "duration": 360},
+            {"name": "软件开发安全", "format": "机考", "duration": 360},
+        ],
+        "tags": ["信息安全", "顶级认证", "高门槛"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "全年可约考", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后2-5个工作日", "is_estimated": True},
+        ]
+    },
+    # ======================== 公共管理/综合 (4) ========================
+    {
+        "id": 37, "name": "人力资源管理师", "full_name": "企业人力资源管理师职业技能等级认定",
+        "category": "技能等级认定", "industry": "公共管理",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "各省人社部门认定机构",
+        "official_website": "https://www.mohrss.gov.cn",
+        "difficulty": 2, "gold_content": 2.5,
+        "description": "人力资源管理师是从事人力资源规划、招聘、培训、绩效、薪酬、劳动关系等管理工作的专业能力证明，是HR岗位入门和晋升的常用证书。",
+        "eligibility": "四级:高中+1年；三级:大专+1年或本科在校生；二级:本科+2年或硕士+1年；一级:本科+4年或硕士+3年。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "理论知识", "format": "机考", "duration": 90},
+            {"name": "专业技能", "format": "机考", "duration": 120},
+        ],
+        "tags": ["HR", "企业通用", "门槛低"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "各省不同，一般每年2次", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后30-45天", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 38, "name": "社会工作者", "full_name": "社会工作者职业资格考试",
+        "category": "水平评价类", "industry": "公共管理",
+        "target_groups": ["应届", "职场1-3年", "职场3-5年+"],
+        "organizing_body": "民政部/人力资源社会保障部",
+        "official_website": "https://www.mca.gov.cn",
+        "difficulty": 2, "gold_content": 3.0,
+        "description": "社会工作者职业资格是从事社会工作服务(如社区服务、社会福利、社会救助等)的专业资格，在社区工作者招考和公务员考试中具有政策加分优势。",
+        "eligibility": "初级:高中/中专+4年工作；专科+2年；本科应届可报。中级:高中+初级证+6年；专科+4年；本科+3年；硕士+1年；博士直接可报。",
+        "exam_format": "笔试",
+        "subjects": [
+            {"name": "社会工作综合能力(初级/中级)", "format": "笔试", "duration": 120},
+            {"name": "社会工作实务(初级/中级)", "format": "笔试", "duration": 120},
+            {"name": "社会工作法规与政策(中级)", "format": "笔试", "duration": 120},
+        ],
+        "tags": ["社会工作", "社区", "考公加分"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "每年3-4月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "每年6月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "每年8-9月", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 39, "name": "PMP", "full_name": "项目管理专业人士认证",
+        "category": "国际认证", "industry": "公共管理",
+        "target_groups": ["职场1-3年", "职场3-5年+"],
+        "organizing_body": "PMI (Project Management Institute)",
+        "official_website": "https://www.pmi.org/certifications/project-management-pmp",
+        "difficulty": 3, "gold_content": 4.0,
+        "description": "PMP是全球项目管理领域最具权威的认证，适用于IT、建筑、制造等几乎所有行业，是项目经理岗位的核心加分证书。",
+        "eligibility": "本科学历+3年(36个月)项目管理经验+35小时项目管理培训；高中学历+5年(60个月)经验+35小时培训。",
+        "exam_format": "机考",
+        "subjects": [
+            {"name": "项目管理综合", "format": "机考", "duration": 230},
+        ],
+        "tags": ["项目管理", "全球认可", "通用性强"],
+        "timelines": [
+            {"event_type": "exam", "period_desc": "全年可约考", "is_estimated": True},
+            {"event_type": "score", "period_desc": "当场出分", "is_estimated": True},
+        ]
+    },
+    {
+        "id": 40, "name": "CATTI", "full_name": "全国翻译专业资格(水平)考试",
+        "category": "水平评价类", "industry": "公共管理",
+        "target_groups": ["在校生", "应届", "职场1-3年"],
+        "organizing_body": "中国外文局/人力资源社会保障部",
+        "official_website": "https://www.catticenter.com",
+        "difficulty": 4, "gold_content": 4.0,
+        "description": "CATTI是中国翻译领域唯一的国家级职业资格考试，是评定翻译系列职称的唯一途径(以考代评)，也是翻译硕士(MTI)必备证书。",
+        "eligibility": "无学历和年龄限制，任何人均可报考。但通过率极低(约10-15%)，建议有较强的双语功底。",
+        "exam_format": "机考+笔试",
+        "subjects": [
+            {"name": "笔译综合能力", "format": "机考", "duration": 120},
+            {"name": "笔译实务", "format": "机考", "duration": 180},
+            {"name": "口译综合能力(交传/同传)", "format": "机考+录音", "duration": 60},
+            {"name": "口译实务(交传/同传)", "format": "口译+录音", "duration": 60},
+        ],
+        "tags": ["翻译", "以考代评", "MTI"],
+        "timelines": [
+            {"event_type": "signup_start", "period_desc": "上半年3月/下半年9月", "is_estimated": True},
+            {"event_type": "exam", "period_desc": "上半年6月/下半年11月", "is_estimated": True},
+            {"event_type": "score", "period_desc": "考后约60天", "is_estimated": True},
+        ]
+    },
+]
+
+# 考试分类维度
+CATEGORIES = [
+    "准入类",         # 没证不能上岗（法考、执业医师、建造师等）
+    "水平评价类",     # 证明能力水平（软考、会计职称等）
+    "国际认证",       # 国际机构颁发（CFA、ACCA、PMP等）
+    "企业认证",       # 企业颁发（华为、阿里云、AWS）
+    "技能等级认定",   # 职业能力等级（人力资源管理师等）
+]
+
+INDUSTRIES = [
+    "财会金融",
+    "法律",
+    "建筑地产",
+    "医疗健康",
+    "教育培训",
+    "IT互联网",
+    "公共管理",
+]
+
+TARGET_GROUPS = [
+    "在校生",
+    "应届",
+    "职场1-3年",
+    "职场3-5年+",
+]
+
+
+def main():
+    """生成种子数据JSON文件"""
+    output = {
+        "exams": EXAMS,
+        "metadata": {
+            "total_exams": len(EXAMS),
+            "categories": CATEGORIES,
+            "industries": INDUSTRIES,
+            "target_groups": TARGET_GROUPS,
+            "generated_at": "2026-05-30",
+        }
+    }
+
+    # 输出JSON
+    json_path = os.path.join(
+        os.path.dirname(__file__), "..", "assets", "seed_exams.json"
+    )
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
+
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ 已生成 {len(EXAMS)} 个考试的种子数据 -> {json_path}")
+
+    # 统计
+    cat_count = {}
+    ind_count = {}
+    for exam in EXAMS:
+        cat_count[exam["category"]] = cat_count.get(exam["category"], 0) + 1
+        ind_count[exam["industry"]] = ind_count.get(exam["industry"], 0) + 1
+
+    print(f"\n📊 按类型统计:")
+    for cat, count in sorted(cat_count.items(), key=lambda x: -x[1]):
+        print(f"  {cat}: {count}")
+    print(f"\n📊 按行业统计:")
+    for ind, count in sorted(ind_count.items(), key=lambda x: -x[1]):
+        print(f"  {ind}: {count}")
+
+
+if __name__ == "__main__":
+    main()
