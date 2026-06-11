@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/exam.dart';
-import '../screens/exam_detail_screen.dart';
 import '../theme/app_theme.dart';
 
 /// 考试搜索代理
@@ -145,7 +144,7 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('💡 试试搜索', style: AppTheme.body?.copyWith(
+          Text('💡 试试搜索', style: AppTheme.body.copyWith(
             fontWeight: FontWeight.w600,
           )),
           const SizedBox(height: 12),
@@ -164,7 +163,7 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
                 )).toList(),
           ),
           const SizedBox(height: 24),
-          Text('热门搜索', style: AppTheme.body?.copyWith(
+          Text('热门搜索', style: AppTheme.body.copyWith(
             fontWeight: FontWeight.w600,
           )),
           const SizedBox(height: 8),

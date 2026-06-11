@@ -220,7 +220,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         if (exam.officialWebsite.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text('官网: ${exam.officialWebsite}',
-              style: AppTheme.bodySmall?.copyWith(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 decoration: TextDecoration.underline,
               )),
@@ -259,7 +259,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
                     ),
                     const SizedBox(width: 12),
                     Expanded(child: Text(subject.name,
-                        style: AppTheme.bodySmall?.copyWith(
+                        style: AppTheme.bodySmall.copyWith(
                           color: AppTheme.textPrimary,
                           fontWeight: FontWeight.w500,
                         ))),

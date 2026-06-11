@@ -106,7 +106,7 @@ class Exam {
     if (value is List) {
       return value.map((e) {
         if (e is String) return '"$e"';
-        if (e is Map) return _mapToString(e);
+        if (e is Map) return _mapToString(Map<String, dynamic>.from(e));
         return e.toString();
       }).join(',');
     }

@@ -108,9 +108,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn('\(_totalExams)', '收录考试'),
-                      _buildStatColumn('\(_followedExams.length)', '已关注'),
-                      _buildStatColumn('\(_bookmarkedExams.length)', '已收藏'),
+                      _buildStatColumn('$_totalExams', '收录考试'),
+                      _buildStatColumn('${_followedExams.length}', '已关注'),
+                      _buildStatColumn('${_bookmarkedExams.length}', '已收藏'),
                     ],
                   ),
                 ],

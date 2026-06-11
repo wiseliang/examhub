@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/exam.dart';
-import '../models/exam_timeline.dart';
 import '../theme/app_theme.dart';
 import '../widgets/exam_card.dart';
 import '../widgets/exam_search_delegate.dart';

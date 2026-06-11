@@ -26,7 +26,6 @@ class _DiscoverScreenState extends State<DiscoverScreen>
 
   // 数据
   List<Exam> _exams = [];
-  Map<String, int> _industryCounts = {};
   bool _loading = true;
   bool _showFilterPanel = false;
 
@@ -92,12 +91,8 @@ class _DiscoverScreenState extends State<DiscoverScreen>
           break;
       }
 
-      // 行业统计
-      final counts = await _db.getExamCountByIndustry();
-
       setState(() {
         _exams = results;
-        _industryCounts = counts;
         _loading = false;
       });
     } catch (e) {
@@ -172,7 +167,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                   child: DropdownButton<String>(
                     value: _sortBy,
                     isDense: true,
-                    style: AppTheme.bodySmall?.copyWith(
+                    style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.primaryColor),
                     items: _sortOptions
                         .map((s) => DropdownMenuItem(

@@ -312,12 +312,11 @@ class DatabaseHelper {
   /// 是否已关注
   Future<bool> isFollowing(int examId) async {
     final db = await database;
-    final count = await db.query(
-      'local_follow',
-      columns: ['COUNT(*) as c'],
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as c FROM local_follow WHERE exam_id = ?',
+      [examId],
     );
-    final result = Sqflite.firstIntValue(count as List<Map<String, dynamic>>);
-    return (result ?? 0) > 0;
+    return (result.first['c'] as int) > 0;
   }
 
   /// 获取关注的考试列表

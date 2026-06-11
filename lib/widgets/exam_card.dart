@@ -168,7 +168,7 @@ class ExamCard extends StatelessWidget {
               ),
               child: Text(
                 exam.description,
-                style: AppTheme.bodySmall?.copyWith(height: 1.5),
+                style: AppTheme.bodySmall.copyWith(height: 1.5),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
