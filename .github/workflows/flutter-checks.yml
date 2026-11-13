@@ -43,6 +43,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Set up Android SDK
+        if: github.event_name != 'pull_request'
+        uses: android-actions/setup-android@v4.0.4
       - name: Install Android build components
         if: github.event_name != 'pull_request'
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'

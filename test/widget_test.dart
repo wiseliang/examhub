@@ -34,6 +34,7 @@ void main() {
   });
 
   test('初始化和并发读取保留全部 40 个考试及 CPA 科目', () async {
+    await helper.close();
     final connections = await Future.wait(
       List.generate(3, (_) => helper.database),
     );
