@@ -49,9 +49,9 @@ jobs:
       - name: Install Android build components
         if: github.event_name != 'pull_request'
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
-      - name: Build Android ARM64 test APK
+      - name: Build optimized Android ARM64 APK
         if: github.event_name != 'pull_request'
-        run: flutter build apk --debug --target-platform android-arm64
+        run: flutter build apk --release --target-platform android-arm64 --split-per-abi --split-debug-info=build/dart-symbols
       - name: Prepare download
         if: github.event_name != 'pull_request'
         env:
@@ -59,19 +59,27 @@ jobs:
           BUILD_RUN: ${{ github.run_number }}
         run: |
           mkdir -p delivery
-          cp build/app/outputs/flutter-apk/app-debug.apk 'delivery/考试通安卓测试版.apk'
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk 'delivery/考试通安卓精简版.apk'
           cd delivery
-          sha256sum '考试通安卓测试版.apk' > '安装包校验.txt'
-          printf '考试通 Android ARM64 测试版\nCommit: %s\nRun: %s\n调试签名，不用于商店发布；跨构建签名可能变化。\n' "$BUILD_COMMIT" "$BUILD_RUN" > '构建信息.txt'
+          sha256sum '考试通安卓精简版.apk' > '安装包校验.txt'
+          printf '考试通 Android ARM64 精简测试版（Release 优化）\nCommit: %s\nRun: %s\n调试签名，不用于商店发布；跨构建签名可能变化。\n' "$BUILD_COMMIT" "$BUILD_RUN" > '构建信息.txt'
       - name: Upload APK
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: examhub-android-debug-${{ github.run_number }}
+          name: examhub-android-release-${{ github.run_number }}
           path: delivery/
           retention-days: 7
           if-no-files-found: error
           compression-level: 0
+      - name: Preserve Dart symbols
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: examhub-dart-symbols-${{ github.run_number }}
+          path: build/dart-symbols/
+          retention-days: 7
+          if-no-files-found: error
       - name: Build summary
         if: success() && github.event_name != 'pull_request'
         run: |
