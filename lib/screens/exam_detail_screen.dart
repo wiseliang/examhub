@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../models/exam_timeline.dart';
@@ -50,6 +51,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
       // 记录浏览历史
       await _db.recordBrowse(widget.examId);
 
+      if (!mounted) return;
       setState(() {
         _exam = exam;
         _timelines = timelines;
@@ -60,7 +62,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
       });
     } catch (e) {
       debugPrint('加载考试详情失败: $e');
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -91,11 +93,13 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
               expandedHeight: 200,
               pinned: true,
               backgroundColor: Colors.white,
-              title: Text(exam.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  )),
+              title: Text(
+                exam.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(
@@ -115,25 +119,31 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(exam.fullName,
-                              style: AppTheme.heading3),
+                          Text(exam.fullName, style: AppTheme.heading3),
                           const SizedBox(height: 8),
                           Row(
                             children: [
                               _buildStars(exam.goldContent),
                               const SizedBox(width: 8),
-                              Text('${exam.goldContent} 含金量',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.accentColor,
-                                  )),
+                              Text(
+                                '${exam.goldContent} 含金量',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.accentColor,
+                                ),
+                              ),
                               const SizedBox(width: 16),
-                              Icon(Icons.school,
-                                  size: 14, color: AppTheme.textLight),
+                              const Icon(
+                                Icons.school,
+                                size: 14,
+                                color: AppTheme.textLight,
+                              ),
                               const SizedBox(width: 4),
-                              Text('难度 ${exam.difficulty}/5',
-                                  style: AppTheme.caption),
+                              Text(
+                                '难度 ${exam.difficulty}/5',
+                                style: AppTheme.caption,
+                              ),
                             ],
                           ),
                         ],
@@ -145,11 +155,10 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
               actions: [
                 IconButton(
                   icon: Icon(
-                    _isBookmarked
-                        ? Icons.bookmark
-                        : Icons.bookmark_border,
-                    color:
-                        _isBookmarked ? AppTheme.accentColor : Colors.white70,
+                    _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    color: _isBookmarked
+                        ? AppTheme.accentColor
+                        : Colors.white70,
                   ),
                   onPressed: _toggleBookmark,
                 ),
@@ -198,10 +207,17 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildInfoTag(exam.category, AppTheme.getCategoryColor(exam.category)),
-            _buildInfoTag(exam.industry, AppTheme.getIndustryColor(exam.industry)),
-            ...exam.targetGroups
-                .map((g) => _buildInfoTag(g, AppTheme.primaryColor)),
+            _buildInfoTag(
+              exam.category,
+              AppTheme.getCategoryColor(exam.category),
+            ),
+            _buildInfoTag(
+              exam.industry,
+              AppTheme.getIndustryColor(exam.industry),
+            ),
+            ...exam.targetGroups.map(
+              (g) => _buildInfoTag(g, AppTheme.primaryColor),
+            ),
           ],
         ),
 
@@ -219,11 +235,13 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         Text(exam.organizingBody, style: AppTheme.body),
         if (exam.officialWebsite.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text('官网: ${exam.officialWebsite}',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.primaryColor,
-                decoration: TextDecoration.underline,
-              )),
+          Text(
+            '官网: ${exam.officialWebsite}',
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.primaryColor,
+              decoration: TextDecoration.underline,
+            ),
+          ),
         ],
 
         const SizedBox(height: AppTheme.spacingLg),
@@ -239,35 +257,40 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         _buildSectionTitle('📝 考试科目'),
         const SizedBox(height: 8),
         if (exam.subjects.isNotEmpty)
-          ...exam.subjects.map((subject) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      subject.format == '机考'
-                          ? Icons.computer_rounded
-                          : subject.format == '面试'
-                              ? Icons.people_rounded
-                              : Icons.edit_rounded,
-                      size: 18,
-                      color: AppTheme.primaryColor,
+          ...exam.subjects.map(
+            (subject) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.backgroundColor,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    subject.format == '机考'
+                        ? Icons.computer_rounded
+                        : subject.format == '面试'
+                        ? Icons.people_rounded
+                        : Icons.edit_rounded,
+                    size: 18,
+                    color: AppTheme.primaryColor,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      subject.name,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(subject.name,
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ))),
-                    Text('${subject.duration}分钟',
-                        style: AppTheme.caption),
-                  ],
-                ),
-              )),
+                  ),
+                  Text('${subject.duration}分钟', style: AppTheme.caption),
+                ],
+              ),
+            ),
+          ),
 
         const SizedBox(height: AppTheme.spacingLg),
 
@@ -277,8 +300,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         if (_timelines.isNotEmpty)
           ..._timelines.map((tl) => _buildTimelineRow(tl)),
 
-        if (_timelines.isEmpty)
-          Text('暂无时间信息', style: AppTheme.caption),
+        if (_timelines.isEmpty) const Text('暂无时间信息', style: AppTheme.caption),
 
         const SizedBox(height: 80),
       ],
@@ -289,18 +311,19 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
 
   Widget _buildNoticesTab() {
     if (_notices.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.notifications_off_rounded,
-                size: 48, color: AppTheme.textLight),
-            const SizedBox(height: 12),
-            const Text('暂无官方通知',
-                style: TextStyle(color: AppTheme.textSecondary)),
-            const SizedBox(height: 4),
-            Text('官方通知将在此显示',
-                style: AppTheme.caption),
+            Icon(
+              Icons.notifications_off_rounded,
+              size: 48,
+              color: AppTheme.textLight,
+            ),
+            SizedBox(height: 12),
+            Text('暂无官方通知', style: TextStyle(color: AppTheme.textSecondary)),
+            SizedBox(height: 4),
+            Text('官方通知将在此显示', style: AppTheme.caption),
           ],
         ),
       );
@@ -309,7 +332,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
     return ListView.separated(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       itemCount: _notices.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final notice = _notices[index];
         return Container(
@@ -325,9 +348,13 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
               Row(
                 children: [
                   Expanded(
-                    child: Text(notice.title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15)),
+                    child: Text(
+                      notice.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -338,29 +365,41 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
               ),
               if (notice.summary.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text(notice.summary, style: AppTheme.bodySmall,
-                    maxLines: 3, overflow: TextOverflow.ellipsis),
+                Text(
+                  notice.summary,
+                  style: AppTheme.bodySmall,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
               if (notice.keyPoints.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
                   runSpacing: 4,
-                  children: notice.keyPoints.map((kp) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warningColor
-                              .withValues(alpha: 0.08),
-                          borderRadius:
-                              BorderRadius.circular(4),
-                        ),
-                        child: Text(kp.content,
+                  children: notice.keyPoints
+                      .map(
+                        (kp) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningColor.withValues(
+                              alpha: 0.08,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            kp.content,
                             style: const TextStyle(
                               fontSize: 11,
                               color: AppTheme.warningColor,
-                            )),
-                      )).toList(),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
             ],
@@ -383,24 +422,44 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         Row(
           children: [
             Expanded(
-                child: _buildMetricCard(
-                    '含金量', '${exam.goldContent}', '⭐', AppTheme.accentColor)),
+              child: _buildMetricCard(
+                '含金量',
+                '${exam.goldContent}',
+                '⭐',
+                AppTheme.accentColor,
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
-                child: _buildMetricCard(
-                    '难度', '${exam.difficulty}/5', '📊', AppTheme.textPrimary)),
+              child: _buildMetricCard(
+                '难度',
+                '${exam.difficulty}/5',
+                '📊',
+                AppTheme.textPrimary,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-                child: _buildMetricCard('科目数',
-                    '${exam.subjects.length}个', '📝', AppTheme.primaryColor)),
+              child: _buildMetricCard(
+                '科目数',
+                '${exam.subjects.length}个',
+                '📝',
+                AppTheme.primaryColor,
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
-                child: _buildMetricCard('考试形式',
-                    exam.examFormat, '💻', AppTheme.successColor)),
+              child: _buildMetricCard(
+                '考试形式',
+                exam.examFormat,
+                '💻',
+                AppTheme.successColor,
+              ),
+            ),
           ],
         ),
 
@@ -410,8 +469,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         _buildInfoRow('类型', exam.category),
         _buildInfoRow('行业', exam.industry),
         _buildInfoRow('适用人群', exam.targetGroups.join(' / ')),
-        if (exam.tags.isNotEmpty)
-          _buildInfoRow('标签', exam.tags.join(' · ')),
+        if (exam.tags.isNotEmpty) _buildInfoRow('标签', exam.tags.join(' · ')),
 
         const SizedBox(height: 80),
       ],
@@ -423,8 +481,9 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
   Widget _buildBottomBar(Exam exam) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacingMd,
-          vertical: AppTheme.spacingSm + 4),
+        horizontal: AppTheme.spacingMd,
+        vertical: AppTheme.spacingSm + 4,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         boxShadow: [
@@ -490,11 +549,13 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
         if (index < rating.floor()) {
-          return const Icon(Icons.star,
-              size: 16, color: AppTheme.accentColor);
+          return const Icon(Icons.star, size: 16, color: AppTheme.accentColor);
         }
-        return const Icon(Icons.star_border,
-            size: 16, color: AppTheme.textLight);
+        return const Icon(
+          Icons.star_border,
+          size: 16,
+          color: AppTheme.textLight,
+        );
       }),
     );
   }
@@ -506,9 +567,14 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w500, color: color)),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -526,10 +592,14 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tl.eventTypeLabel, style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w500,
-                color: AppTheme.textPrimary,
-              )),
+              Text(
+                tl.eventTypeLabel,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
               Text(tl.periodDesc, style: AppTheme.caption),
             ],
           ),
@@ -539,7 +609,11 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
   }
 
   Widget _buildMetricCard(
-      String label, String value, String icon, Color color) {
+    String label,
+    String value,
+    String icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -551,11 +625,14 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         children: [
           Text(icon, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 8),
-          Text(value, style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
-          )),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(label, style: AppTheme.caption),
         ],
@@ -569,10 +646,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: AppTheme.bodySmall),
-          ),
+          SizedBox(width: 72, child: Text(label, style: AppTheme.bodySmall)),
           Expanded(child: Text(value, style: AppTheme.body)),
         ],
       ),
@@ -583,9 +657,11 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
     if (_exam == null) return;
     if (_isFollowing) {
       await _db.unfollowExam(_exam!.id);
+      if (!mounted) return;
       setState(() => _isFollowing = false);
     } else {
       await _db.followExam(_exam!.id);
+      if (!mounted) return;
       setState(() => _isFollowing = true);
     }
   }
@@ -594,9 +670,11 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
     if (_exam == null) return;
     if (_isBookmarked) {
       await _db.unbookmarkExam(_exam!.id);
+      if (!mounted) return;
       setState(() => _isBookmarked = false);
     } else {
       await _db.bookmarkExam(_exam!.id);
+      if (!mounted) return;
       setState(() => _isBookmarked = true);
     }
   }

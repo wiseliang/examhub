@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -14,7 +15,9 @@ class SeedData {
     for (final exam in exams) {
       // 处理subjects：确保是JSON字符串
       final subjects = exam['subjects'];
-      final subjectsJson = subjects is String ? subjects : jsonEncode(subjects ?? []);
+      final subjectsJson = subjects is String
+          ? subjects
+          : jsonEncode(subjects ?? []);
 
       // 处理target_groups
       final targetGroups = exam['target_groups'];

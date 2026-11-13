@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// App主题配置 - 内容丰富型（参考小红书+知乎风格）
 class AppTheme {
@@ -40,11 +40,11 @@ class AppTheme {
   // ==================== 分类颜色映射 ====================
 
   static const Map<String, Color> categoryColors = {
-    '准入类': Color(0xFFE74C3C),       // 红色（重要）
-    '水平评价类': Color(0xFF2980B9),    // 蓝色
-    '国际认证': Color(0xFF8E44AD),      // 紫色
-    '企业认证': Color(0xFF27AE60),      // 绿色
-    '技能等级认定': Color(0xFFF39C12),  // 橙色
+    '准入类': Color(0xFFE74C3C), // 红色（重要）
+    '水平评价类': Color(0xFF2980B9), // 蓝色
+    '国际认证': Color(0xFF8E44AD), // 紫色
+    '企业认证': Color(0xFF27AE60), // 绿色
+    '技能等级认定': Color(0xFFF39C12), // 橙色
   };
 
   static const Map<String, Color> industryColors = {
@@ -190,7 +190,10 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusMd),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
+        margin: const EdgeInsets.symmetric(
+          horizontal: spacingMd,
+          vertical: spacingSm,
+        ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
@@ -198,7 +201,10 @@ class AppTheme {
         unselectedItemColor: textLight,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        selectedLabelStyle: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: TextStyle(fontSize: 11),
       ),
       chipTheme: ChipThemeData(
@@ -206,14 +212,15 @@ class AppTheme {
         selectedColor: primaryColor.withValues(alpha: 0.1),
         labelStyle: const TextStyle(fontSize: 12, color: primaryColor),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: backgroundColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusLg),
           borderSide: BorderSide.none,

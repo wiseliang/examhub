@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import '../models/exam.dart';
 import '../models/exam_timeline.dart';
 import 'seed_data.dart';
@@ -10,11 +11,25 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+  static Future<Database>? _opening;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    // 首页、发现和个人页会同时读取，必须共用一次初始化。
+    _opening ??= _initDatabase();
+    try {
+      _database = await _opening!;
+      return _database!;
+    } finally {
+      _opening = null;
+    }
+  }
+
+  Future<void> close() async {
+    final db = _database ?? (await _opening);
+    await db?.close();
+    _database = null;
+    _opening = null;
   }
 
   Future<Database> _initDatabase() async {
@@ -143,8 +158,7 @@ class DatabaseHelper {
     final like = '%$query%';
     final maps = await db.query(
       'exam',
-      where:
-          'name LIKE ? OR full_name LIKE ? OR description LIKE ? OR industry LIKE ? OR organizing_body LIKE ?',
+      where: 'name LIKE ? OR full_name LIKE ? OR description LIKE ? OR industry LIKE ? OR organizing_body LIKE ?',
       whereArgs: [like, like, like, like, like],
       orderBy: 'gold_content DESC',
     );
@@ -189,8 +203,7 @@ class DatabaseHelper {
       whereArgs.add(minGoldContent);
     }
 
-    final where =
-        whereClauses.isNotEmpty ? whereClauses.join(' AND ') : null;
+    final where = whereClauses.isNotEmpty ? whereClauses.join(' AND ') : null;
 
     final maps = await db.query(
       'exam',
@@ -226,7 +239,10 @@ class DatabaseHelper {
   }
 
   /// 按人群获取推荐考试
-  Future<List<Exam>> getExamsByTargetGroup(String group, {int limit = 20}) async {
+  Future<List<Exam>> getExamsByTargetGroup(
+    String group, {
+    int limit = 20,
+  }) async {
     final db = await database;
     final maps = await db.query(
       'exam',
@@ -253,21 +269,28 @@ class DatabaseHelper {
   }
 
   /// 获取近期事件
-  Future<List<Map<String, dynamic>>> getUpcomingEvents({int days = 30}) async {
+  Future<List<Map<String, dynamic>>> getUpcomingEvents({
+    int days = 30,
+    DateTime? from,
+  }) async {
     final db = await database;
-    final targetDate =
-        DateTime.now().add(Duration(days: days)).toIso8601String();
-    final now = DateTime.now().toIso8601String();
+    final current = from ?? DateTime.now();
+    final today = DateTime.utc(current.year, current.month, current.day);
+    final targetDate = today.add(Duration(days: days)).toIso8601String();
+    final now = today.toIso8601String();
 
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT et.*, e.name as exam_name, e.full_name as exam_full_name
       FROM exam_timeline et
       JOIN exam e ON et.exam_id = e.id
       WHERE et.date IS NOT NULL
-        AND et.date >= ?
-        AND et.date <= ?
-      ORDER BY et.date ASC
-    ''', [now, targetDate]);
+        AND date(et.date) >= date(?)
+        AND date(et.date) <= date(?)
+      ORDER BY date(et.date) ASC, et.id ASC
+    ''',
+      [now, targetDate],
+    );
 
     return result;
   }
@@ -289,7 +312,8 @@ class DatabaseHelper {
   // ==================== 关注/收藏/历史 ====================
 
   /// 关注考试
-  Future<void> followExam(int examId, {
+  Future<void> followExam(
+    int examId, {
     bool remindSignup = true,
     bool remindExam = true,
     bool remindScore = true,
@@ -333,11 +357,9 @@ class DatabaseHelper {
   /// 收藏考试
   Future<void> bookmarkExam(int examId) async {
     final db = await database;
-    await db.insert(
-      'local_bookmark',
-      {'exam_id': examId},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('local_bookmark', {
+      'exam_id': examId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 取消收藏
@@ -375,7 +397,11 @@ class DatabaseHelper {
   Future<void> recordBrowse(int examId) async {
     final db = await database;
     // 清理旧的重复记录
-    await db.delete('browse_history', where: 'exam_id = ?', whereArgs: [examId]);
+    await db.delete(
+      'browse_history',
+      where: 'exam_id = ?',
+      whereArgs: [examId],
+    );
     await db.insert('browse_history', {
       'exam_id': examId,
       'viewed_at': DateTime.now().toIso8601String(),
@@ -385,13 +411,21 @@ class DatabaseHelper {
   /// 获取浏览历史
   Future<List<Exam>> getBrowseHistory({int limit = 50}) async {
     final db = await database;
-    final maps = await db.rawQuery('''
+    final maps = await db.rawQuery(
+      '''
       SELECT DISTINCT e.* FROM exam e
       INNER JOIN browse_history h ON e.id = h.exam_id
       ORDER BY h.viewed_at DESC
       LIMIT ?
-    ''', [limit]);
+    ''',
+      [limit],
+    );
     return maps.map((m) => Exam.fromMap(m)).toList();
+  }
+
+  Future<void> clearBrowseHistory() async {
+    final db = await database;
+    await db.delete('browse_history');
   }
 
   /// 重置数据库

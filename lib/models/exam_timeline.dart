@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// 考试时间节点模型
 class ExamTimeline {
   final int? id;
@@ -81,7 +83,9 @@ class ExamTimeline {
   /// 离今天还有多少天（预估）
   int daysUntil(DateTime from) {
     if (date == null) return -1;
-    return date!.difference(from).inDays;
+    final target = DateTime.utc(date!.year, date!.month, date!.day);
+    final today = DateTime.utc(from.year, from.month, from.day);
+    return target.difference(today).inDays;
   }
 }
 
@@ -140,11 +144,17 @@ class NoticeKeyPoint {
   Map<String, dynamic> toMap() => {'type': type, 'content': content};
 
   static List<NoticeKeyPoint> fromJsonList(dynamic value) {
-    if (value == null) return [];
+    if (value is String) {
+      try {
+        value = jsonDecode(value);
+      } on FormatException {
+        return [];
+      }
+    }
     if (value is List) {
       return value
-          .map((e) =>
-              NoticeKeyPoint.fromMap(e is Map<String, dynamic> ? e : {}))
+          .whereType<Map<String, dynamic>>()
+          .map(NoticeKeyPoint.fromMap)
           .toList();
     }
     return [];

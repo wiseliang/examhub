@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
@@ -50,12 +51,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     '公共管理',
   ];
 
-  final List<String> _targetGroups = [
-    '在校生',
-    '应届',
-    '职场1-3年',
-    '职场3-5年+',
-  ];
+  final List<String> _targetGroups = ['在校生', '应届', '职场1-3年', '职场3-5年+'];
 
   final List<String> _sortOptions = ['含金量', '难度', '名称'];
 
@@ -69,10 +65,8 @@ class _DiscoverScreenState extends State<DiscoverScreen>
     setState(() => _loading = true);
     try {
       final results = await _db.filterExams(
-        category:
-            _selectedCategory == '全部' ? null : _selectedCategory,
-        industry:
-            _selectedIndustry == '全部' ? null : _selectedIndustry,
+        category: _selectedCategory == '全部' ? null : _selectedCategory,
+        industry: _selectedIndustry == '全部' ? null : _selectedIndustry,
         targetGroup: _selectedTargetGroups.isNotEmpty
             ? _selectedTargetGroups.first
             : null,
@@ -91,13 +85,14 @@ class _DiscoverScreenState extends State<DiscoverScreen>
           break;
       }
 
+      if (!mounted) return;
       setState(() {
         _exams = results;
         _loading = false;
       });
     } catch (e) {
       debugPrint('加载发现页数据失败: $e');
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -130,8 +125,9 @@ class _DiscoverScreenState extends State<DiscoverScreen>
             items: _industries,
             selectedItem: _selectedIndustry ?? '全部',
             onSelected: (industry) {
-              setState(() =>
-                  _selectedIndustry = industry == '全部' ? null : industry);
+              setState(
+                () => _selectedIndustry = industry == '全部' ? null : industry,
+              );
               _loadExams();
             },
           ),
@@ -143,8 +139,9 @@ class _DiscoverScreenState extends State<DiscoverScreen>
             items: _categories,
             selectedItem: _selectedCategory ?? '全部',
             onSelected: (category) {
-              setState(() =>
-                  _selectedCategory = category == '全部' ? null : category);
+              setState(
+                () => _selectedCategory = category == '全部' ? null : category,
+              );
               _loadExams();
             },
           ),
@@ -155,25 +152,27 @@ class _DiscoverScreenState extends State<DiscoverScreen>
           // 结果统计 + 排序
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacingMd, AppTheme.spacingSm,
-              AppTheme.spacingMd, AppTheme.spacingSm,
+              AppTheme.spacingMd,
+              AppTheme.spacingSm,
+              AppTheme.spacingMd,
+              AppTheme.spacingSm,
             ),
             child: Row(
               children: [
-                Text('共 ${_exams.length} 个考试',
-                    style: AppTheme.bodySmall),
+                Text('共 ${_exams.length} 个考试', style: AppTheme.bodySmall),
                 const Spacer(),
                 DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _sortBy,
                     isDense: true,
                     style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.primaryColor),
+                      color: AppTheme.primaryColor,
+                    ),
                     items: _sortOptions
-                        .map((s) => DropdownMenuItem(
-                              value: s,
-                              child: Text('按$s排序'),
-                            ))
+                        .map(
+                          (s) =>
+                              DropdownMenuItem(value: s, child: Text('按$s排序')),
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
@@ -192,21 +191,21 @@ class _DiscoverScreenState extends State<DiscoverScreen>
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _exams.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        onRefresh: _loadExams,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 80),
-                          itemCount: _exams.length,
-                          itemBuilder: (context, index) {
-                            final exam = _exams[index];
-                            return ExamCard(
-                              exam: exam,
-                              onTap: () => _navigateToDetail(context, exam),
-                            );
-                          },
-                        ),
-                      ),
+                ? _buildEmptyState()
+                : RefreshIndicator(
+                    onRefresh: _loadExams,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 80),
+                      itemCount: _exams.length,
+                      itemBuilder: (context, index) {
+                        final exam = _exams[index];
+                        return ExamCard(
+                          exam: exam,
+                          onTap: () => _navigateToDetail(context, exam),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -225,7 +224,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('适用人群', style: AppTheme.bodySmall),
+          const Text('适用人群', style: AppTheme.bodySmall),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -234,6 +233,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
               final isSelected = _selectedTargetGroups.contains(group);
               return GestureDetector(
                 onTap: () {
+                  if (!mounted) return;
                   setState(() {
                     if (isSelected) {
                       _selectedTargetGroups.remove(group);
@@ -245,7 +245,9 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppTheme.primaryColor.withValues(alpha: 0.1)
@@ -257,13 +259,15 @@ class _DiscoverScreenState extends State<DiscoverScreen>
                           : AppTheme.dividerColor,
                     ),
                   ),
-                  child: Text(group,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isSelected
-                            ? AppTheme.primaryColor
-                            : AppTheme.textSecondary,
-                      )),
+                  child: Text(
+                    group,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isSelected
+                          ? AppTheme.primaryColor
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
                 ),
               );
             }).toList(),
@@ -278,14 +282,20 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off_rounded,
-              size: 64, color: AppTheme.textLight),
+          const Icon(
+            Icons.search_off_rounded,
+            size: 64,
+            color: AppTheme.textLight,
+          ),
           const SizedBox(height: 16),
-          const Text('没有找到匹配的考试',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+          const Text(
+            '没有找到匹配的考试',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+          ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: () {
+              if (!mounted) return;
               setState(() {
                 _selectedCategory = null;
                 _selectedIndustry = null;
@@ -305,7 +315,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
       context: context,
       delegate: ExamSearchDelegate(),
     );
-    if (result != null && mounted) {
+    if (result != null && context.mounted) {
       _navigateToDetail(context, result);
     }
   }
@@ -313,9 +323,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
   void _navigateToDetail(BuildContext context, Exam exam) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ExamDetailScreen(examId: exam.id),
-      ),
+      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id)),
     ).then((_) => _loadExams());
   }
 }

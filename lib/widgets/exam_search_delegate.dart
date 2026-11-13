@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
@@ -18,10 +19,10 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
         foregroundColor: AppTheme.textPrimary,
         elevation: 0,
       ),
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppTheme.backgroundColor,
-        hintStyle: const TextStyle(color: AppTheme.textLight, fontSize: 14),
+        hintStyle: TextStyle(color: AppTheme.textLight, fontSize: 14),
       ),
     );
   }
@@ -30,10 +31,7 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
   List<Widget>? buildActions(BuildContext context) {
     return [
       if (query.isNotEmpty)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () => query = '',
-        ),
+        IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
     ];
   }
 
@@ -75,13 +73,18 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.search_off, size: 48, color: AppTheme.textLight),
+                const Icon(
+                  Icons.search_off,
+                  size: 48,
+                  color: AppTheme.textLight,
+                ),
                 const SizedBox(height: 12),
-                Text('未找到"$query"相关考试',
-                    style: const TextStyle(color: AppTheme.textSecondary)),
+                Text(
+                  '未找到"$query"相关考试',
+                  style: const TextStyle(color: AppTheme.textSecondary),
+                ),
                 const SizedBox(height: 8),
-                Text('请尝试其他关键词搜索',
-                    style: AppTheme.caption),
+                const Text('请尝试其他关键词搜索', style: AppTheme.caption),
               ],
             ),
           );
@@ -89,13 +92,15 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
 
         return ListView.separated(
           itemCount: results.length,
-          separatorBuilder: (_, __) =>
+          separatorBuilder: (_, _) =>
               const Divider(height: 1, indent: 72, endIndent: 16),
           itemBuilder: (context, index) {
             final exam = results[index];
             return ListTile(
               contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacingMd, vertical: 4),
+                horizontal: AppTheme.spacingMd,
+                vertical: 4,
+              ),
               leading: Container(
                 width: 44,
                 height: 44,
@@ -106,9 +111,7 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  exam.name.length > 3
-                      ? exam.name.substring(0, 3)
-                      : exam.name,
+                  exam.name.length > 3 ? exam.name.substring(0, 3) : exam.name,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: exam.name.length > 3 ? 10 : 13,
@@ -116,18 +119,27 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
                   ),
                 ),
               ),
-              title: Text(exam.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(exam.organizingBody,
-                  style: AppTheme.caption, maxLines: 1),
+              title: Text(
+                exam.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                exam.organizingBody,
+                style: AppTheme.caption,
+                maxLines: 1,
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.star, size: 14, color: AppTheme.accentColor),
+                  const Icon(Icons.star, size: 14, color: AppTheme.accentColor),
                   const SizedBox(width: 2),
-                  Text('${exam.goldContent}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary)),
+                  Text(
+                    '${exam.goldContent}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
                 ],
               ),
               onTap: () => close(context, exam),
@@ -144,31 +156,34 @@ class ExamSearchDelegate extends SearchDelegate<Exam?> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('💡 试试搜索', style: AppTheme.body.copyWith(
-            fontWeight: FontWeight.w600,
-          )),
+          Text(
+            '💡 试试搜索',
+            style: AppTheme.body.copyWith(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [
-              'CPA', '法考', '建造师', 'CFA', '会计',
-              '建筑', '金融', 'IT', '法律', '医疗',
-            ].map((keyword) => ActionChip(
-                  label: Text(keyword),
-                  onPressed: () {
-                    query = keyword;
-                    showResults(context);
-                  },
-                )).toList(),
+            children:
+                ['CPA', '法考', '建造师', 'CFA', '会计', '建筑', '金融', 'IT', '法律', '医疗']
+                    .map(
+                      (keyword) => ActionChip(
+                        label: Text(keyword),
+                        onPressed: () {
+                          query = keyword;
+                          showResults(context);
+                        },
+                      ),
+                    )
+                    .toList(),
           ),
           const SizedBox(height: 24),
-          Text('热门搜索', style: AppTheme.body.copyWith(
-            fontWeight: FontWeight.w600,
-          )),
+          Text(
+            '热门搜索',
+            style: AppTheme.body.copyWith(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
-          Text('教师资格证 · 注册会计师 · 一级建造师 · PMP',
-              style: AppTheme.caption),
+          const Text('教师资格证 · 注册会计师 · 一级建造师 · PMP', style: AppTheme.caption),
         ],
       ),
     );

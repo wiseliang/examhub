@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _hotExams = hotExams;
         _upcomingEvents = events;
@@ -48,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _loading = false;
       });
     } catch (e) {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
       debugPrint('加载首页数据失败: $e');
     }
   }
@@ -80,27 +82,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 slivers: [
                   // 考试日历横向滑动
                   if (_upcomingEvents.isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: _buildUpcomingEvents(),
-                    ),
+                    SliverToBoxAdapter(child: _buildUpcomingEvents()),
 
                   // Section标题
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
-                          AppTheme.spacingMd, AppTheme.spacingMd,
-                          AppTheme.spacingMd, AppTheme.spacingSm),
+                        AppTheme.spacingMd,
+                        AppTheme.spacingMd,
+                        AppTheme.spacingMd,
+                        AppTheme.spacingSm,
+                      ),
                       child: Row(
                         children: [
-                          Icon(Icons.trending_up_rounded,
-                              size: 20, color: AppTheme.accentColor),
+                          Icon(
+                            Icons.trending_up_rounded,
+                            size: 20,
+                            color: AppTheme.accentColor,
+                          ),
                           SizedBox(width: 6),
-                          Text('热门考试',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                              )),
+                          Text(
+                            '热门考试',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -108,24 +116,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // 考试卡片Feed流
                   SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final exam = _hotExams[index];
-                        return ExamCard(
-                          exam: exam,
-                          isBookmarked: _bookmarkedIds.contains(exam.id),
-                          onTap: () => _navigateToDetail(context, exam),
-                          onBookmark: () => _toggleBookmark(exam),
-                        );
-                      },
-                      childCount: _hotExams.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final exam = _hotExams[index];
+                      return ExamCard(
+                        exam: exam,
+                        isBookmarked: _bookmarkedIds.contains(exam.id),
+                        onTap: () => _navigateToDetail(context, exam),
+                        onBookmark: () => _toggleBookmark(exam),
+                      );
+                    }, childCount: _hotExams.length),
                   ),
 
                   // 底部留白
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 80),
-                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
                 ],
               ),
             ),
@@ -139,19 +142,23 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         const Padding(
           padding: EdgeInsets.fromLTRB(
-              AppTheme.spacingMd, AppTheme.spacingLg,
-              AppTheme.spacingMd, AppTheme.spacingSm),
+            AppTheme.spacingMd,
+            AppTheme.spacingLg,
+            AppTheme.spacingMd,
+            AppTheme.spacingSm,
+          ),
           child: Row(
             children: [
-              Icon(Icons.event_rounded,
-                  size: 18, color: AppTheme.warningColor),
+              Icon(Icons.event_rounded, size: 18, color: AppTheme.warningColor),
               SizedBox(width: 6),
-              Text('近期节点',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  )),
+              Text(
+                '近期节点',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ],
           ),
         ),
@@ -159,10 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 100,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacingMd),
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
             itemCount: _upcomingEvents.length.clamp(0, 10),
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(width: AppTheme.spacingSm),
             itemBuilder: (context, index) {
               final event = _upcomingEvents[index];
@@ -206,18 +212,24 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(iconMap[eventType] ?? '📌', style: const TextStyle(fontSize: 20)),
+            Text(
+              iconMap[eventType] ?? '📌',
+              style: const TextStyle(fontSize: 20),
+            ),
             const Spacer(),
-            Text(examName,
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+            Text(
+              examName,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: 2),
-            Text(periodDesc,
-                style: AppTheme.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+            Text(
+              periodDesc,
+              style: AppTheme.caption,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -230,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       delegate: ExamSearchDelegate(),
     );
-    if (result != null && mounted) {
+    if (result != null && context.mounted) {
       _navigateToDetail(context, result);
     }
   }
@@ -239,18 +251,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToDetail(BuildContext context, Exam exam) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ExamDetailScreen(examId: exam.id),
-      ),
+      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id)),
     ).then((_) => _loadData()); // 返回时刷新（可能改变了收藏/关注状态）
   }
 
   void _navigateToDetailById(BuildContext context, int examId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ExamDetailScreen(examId: examId),
-      ),
+      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: examId)),
     ).then((_) => _loadData());
   }
 

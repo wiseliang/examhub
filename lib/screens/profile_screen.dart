@@ -1,11 +1,14 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
 import 'exam_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool active;
+
+  const ProfileScreen({super.key, this.active = true});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -25,6 +28,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadData();
   }
 
+  @override
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) _loadData();
+  }
+
   Future<void> _loadData() async {
     try {
       final followed = await _db.getFollowedExams();
@@ -32,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final recent = await _db.getBrowseHistory(limit: 10);
       final allExams = await _db.getAllExams();
 
+      if (!mounted) return;
       setState(() {
         _followedExams = followed;
         _bookmarkedExams = bookmarked;
@@ -65,7 +75,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // 顶部统计卡片
             const SizedBox(height: AppTheme.spacingMd),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMd,
+              ),
               padding: const EdgeInsets.all(AppTheme.spacingLg),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -83,23 +95,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white24,
-                        child: Icon(Icons.person, color: Colors.white, size: 28),
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                       SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('考试通用户',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              )),
-                          Text('探索你的职业证书之路',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              )),
+                          Text(
+                            '考试通用户',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '探索你的职业证书之路',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -124,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: '🔔 关注的考试',
               count: _followedExams.length,
               exams: _followedExams,
-              emptyMsg: '还没有关注的考试\n关注考试后，可接收报名/考试提醒',
+              emptyMsg: '还没有关注的考试\n关注后可在这里快速查看，自动提醒尚未开放',
               onTap: (exam) => _navigateToDetail(context, exam),
               onClearAll: _followedExams.isNotEmpty
                   ? () async {
@@ -154,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: (exam) => _navigateToDetail(context, exam),
               onClearAll: _recentBrowsed.isNotEmpty
                   ? () async {
-                      // 清空浏览历史的实现
+                      await _db.clearBrowseHistory();
                       _loadData();
                     }
                   : null,
@@ -164,7 +184,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // 底部菜单
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMd,
+              ),
               decoration: BoxDecoration(
                 color: AppTheme.cardColor,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -208,18 +230,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatColumn(String value, String label) {
     return Column(
       children: [
-        Text(value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            )),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            )),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
       ],
     );
   }
@@ -242,17 +265,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Row(
             children: [
-              Text(title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  )),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
               const SizedBox(width: 6),
               if (count > 0)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -260,17 +287,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text(
                     '$count',
                     style: const TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600),
+                      fontSize: 11,
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               const Spacer(),
               if (onClearAll != null)
                 GestureDetector(
                   onTap: onClearAll,
-                  child: const Text('清空',
-                      style: TextStyle(fontSize: 13, color: AppTheme.textLight)),
+                  child: const Text(
+                    '清空',
+                    style: TextStyle(fontSize: 13, color: AppTheme.textLight),
+                  ),
                 ),
             ],
           ),
@@ -278,19 +308,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (exams.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacingMd, vertical: 8),
-            child: Text(emptyMsg,
-                style: AppTheme.caption,
-                textAlign: TextAlign.center),
+              horizontal: AppTheme.spacingMd,
+              vertical: 8,
+            ),
+            child: Text(
+              emptyMsg,
+              style: AppTheme.caption,
+              textAlign: TextAlign.center,
+            ),
           )
         else
           SizedBox(
             height: 72,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingMd,
+              ),
               itemCount: exams.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final exam = exams[index];
                 return GestureDetector(
@@ -307,23 +343,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(exam.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
+                        Text(
+                          exam.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 2),
                         Row(
                           children: List.generate(
-                              exam.goldContent.floor(),
-                              (_) => const Icon(Icons.star,
-                                  size: 11, color: AppTheme.accentColor)),
+                            exam.goldContent.floor(),
+                            (_) => const Icon(
+                              Icons.star,
+                              size: 11,
+                              color: AppTheme.accentColor,
+                            ),
+                          ),
                         ),
                         const Spacer(),
-                        Text(exam.industry,
-                            style: AppTheme.caption),
+                        Text(exam.industry, style: AppTheme.caption),
                       ],
                     ),
                   ),
@@ -340,21 +381,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: AppTheme.textSecondary),
-      title: Text(title), // ← 这里改为 title: Text(title)
-      trailing: const Icon(Icons.chevron_right, color: AppTheme.textLight),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Icon(icon, color: AppTheme.textSecondary),
+        title: Text(title), // ← 这里改为 title: Text(title)
+        trailing: const Icon(Icons.chevron_right, color: AppTheme.textLight),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
     );
   }
 
   void _navigateToDetail(BuildContext context, Exam exam) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ExamDetailScreen(examId: exam.id),
-      ),
+      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id)),
     ).then((_) => _loadData());
   }
 }

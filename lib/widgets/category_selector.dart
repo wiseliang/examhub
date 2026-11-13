@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../theme/app_theme.dart';
 
 /// 横向滚动分类选择器
@@ -24,7 +25,9 @@ class CategorySelector extends StatelessWidget {
         if (label != null)
           Padding(
             padding: const EdgeInsets.only(
-                left: AppTheme.spacingMd, bottom: AppTheme.spacingSm),
+              left: AppTheme.spacingMd,
+              bottom: AppTheme.spacingSm,
+            ),
             child: Text(label!, style: AppTheme.heading3),
           ),
         SizedBox(
@@ -33,15 +36,17 @@ class CategorySelector extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
             itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final item = items[index];
               final isSelected = item == selectedItem;
               return GestureDetector(
                 onTap: () => onSelected(item),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppTheme.primaryColor
@@ -53,11 +58,10 @@ class CategorySelector extends StatelessWidget {
                     item,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
-                      color: isSelected
-                          ? Colors.white
-                          : AppTheme.textSecondary,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: isSelected ? Colors.white : AppTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -92,7 +96,9 @@ class TagGroup extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(
-              left: AppTheme.spacingMd, bottom: AppTheme.spacingSm),
+            left: AppTheme.spacingMd,
+            bottom: AppTheme.spacingSm,
+          ),
           child: Text(label, style: AppTheme.bodySmall),
         ),
         SizedBox(
@@ -101,7 +107,7 @@ class TagGroup extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
             itemCount: tags.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final tag = tags[index];
               final isSelected = selectedTags.contains(tag);
@@ -116,8 +122,10 @@ class TagGroup extends StatelessWidget {
                   onChanged(newSet);
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppTheme.primaryColor.withValues(alpha: 0.1)
@@ -136,8 +144,11 @@ class TagGroup extends StatelessWidget {
                       if (isSelected)
                         const Padding(
                           padding: EdgeInsets.only(right: 4),
-                          child: Icon(Icons.check,
-                              size: 14, color: AppTheme.primaryColor),
+                          child: Icon(
+                            Icons.check,
+                            size: 14,
+                            color: AppTheme.primaryColor,
+                          ),
                         ),
                       Text(
                         tag,

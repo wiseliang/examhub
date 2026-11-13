@@ -5,7 +5,7 @@ build/
 *.iml
 .idea/
 .vscode/
-*.lock
+# 应用的依赖锁文件需提交，保证开发和 CI 使用相同版本。
 *.g.dart
 *.freezed.dart
 
