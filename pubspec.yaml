@@ -3,7 +3,7 @@ description: 资格考试信息平台 - 中国最全的资格考试信息聚合A
 
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: '>=3.14.0 <4.0.0'

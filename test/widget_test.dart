@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:examhub/app.dart';
 import 'package:examhub/database/database_helper.dart';
+import 'package:examhub/models/exam_session.dart';
+import 'package:examhub/models/exam_timeline.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -87,28 +89,42 @@ void main() {
       '2030-06-12T00:00:00.000',
       '2030-06-13',
     ];
-    final ids = <int>[];
+    final session = ExamSession(
+      examId: 1,
+      year: 2030,
+      region: '测试地区',
+      status: 'confirmed',
+      sourceUrl: 'https://example.com/notice',
+      verifiedAt: DateTime(2030),
+    );
+    final id = await helper.saveSession(
+      session,
+      dates
+          .map(
+            (date) => ExamTimeline(
+              examId: 1,
+              eventType: 'exam',
+              periodDesc: '测试',
+              date: DateTime.parse(date),
+              isEstimated: false,
+              status: 'confirmed',
+              sourceUrl: 'https://example.com/notice',
+              verifiedAt: DateTime(2030),
+            ),
+          )
+          .toList(),
+    );
     try {
-      for (final date in dates) {
-        ids.add(
-          await db.insert('exam_timeline', {
-            'exam_id': 1,
-            'event_type': 'exam',
-            'period_desc': '测试',
-            'date': date,
-            'is_estimated': 0,
-          }),
-        );
-      }
       final events = await helper.getUpcomingEvents(
         days: 2,
         from: DateTime(2030, 6, 10, 23, 59),
       );
-      expect(events.map((event) => event['date']), dates.sublist(1, 3));
+      expect(
+        events.map((event) => DateTime.parse(event['date'] as String).day),
+        [10, 12],
+      );
     } finally {
-      for (final id in ids) {
-        await db.delete('exam_timeline', where: 'id = ?', whereArgs: [id]);
-      }
+      await db.delete('exam_session', where: 'id = ?', whereArgs: [id]);
     }
   });
 
@@ -134,6 +150,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('🔔 关注的考试'), findsOneWidget);
     expect(find.text('CPA'), findsWidgets);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+  testWidgets('详情可切换年份地区批次，旧资料明确标为参考', (tester) async {
+    await tester.pumpWidget(const ExamHubApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.search_rounded).first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'CPA');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CPA').first);
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView).first, const Offset(0, -1100));
+    await tester.pumpAndSettle();
+    final selector = find.byType(DropdownButtonFormField<int>);
+    await tester.ensureVisible(selector);
+    await tester.pumpAndSettle();
+    expect(find.text('往年规律参考'), findsOneWidget);
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('年份待公布'), findsWidgets);
+    await tester.tap(find.textContaining('旧版参考').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('往年资料仅供参考'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

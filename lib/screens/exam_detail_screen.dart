@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../models/exam_timeline.dart';
+import '../models/exam_session.dart';
 import '../theme/app_theme.dart';
 
 class ExamDetailScreen extends StatefulWidget {
@@ -20,6 +21,8 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
 
   Exam? _exam;
   List<ExamTimeline> _timelines = [];
+  List<ExamSession> _sessions = [];
+  int? _selectedSession;
   List<ExamNotice> _notices = [];
   bool _isFollowing = false;
   bool _isBookmarked = false;
@@ -44,6 +47,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
     try {
       final exam = await _db.getExamById(widget.examId);
       final timelines = await _db.getTimelines(widget.examId);
+      final sessions = await _db.getSessions(widget.examId);
       final notices = await _db.getNotices(widget.examId);
       final isFollowing = await _db.isFollowing(widget.examId);
       final isBookmarked = await _db.isBookmarked(widget.examId);
@@ -55,6 +59,8 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
       setState(() {
         _exam = exam;
         _timelines = timelines;
+        _sessions = sessions;
+        _selectedSession = sessions.isEmpty ? null : sessions.first.id;
         _notices = notices;
         _isFollowing = isFollowing;
         _isBookmarked = isBookmarked;
@@ -199,6 +205,12 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
   // ==================== Tab: 概览 ====================
 
   Widget _buildOverviewTab(Exam exam) {
+    final events = _timelines
+        .where((event) => event.sessionId == _selectedSession)
+        .toList();
+    final selected = _sessions
+        .where((session) => session.id == _selectedSession)
+        .firstOrNull;
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spacingMd),
       children: [
@@ -297,10 +309,48 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
         // 时间节点
         _buildSectionTitle('📅 考试时间节点'),
         const SizedBox(height: 8),
-        if (_timelines.isNotEmpty)
-          ..._timelines.map((tl) => _buildTimelineRow(tl)),
-
-        if (_timelines.isEmpty) const Text('暂无时间信息', style: AppTheme.caption),
+        if (_sessions.isNotEmpty) ...[
+          DropdownButtonFormField<int>(
+            initialValue: _selectedSession,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: '年份 / 地区 / 批次'),
+            items: _sessions
+                .map(
+                  (session) => DropdownMenuItem(
+                    value: session.id,
+                    child: Text(
+                      session.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (id) => setState(() => _selectedSession = id),
+          ),
+          const SizedBox(height: 12),
+          Text(selected?.statusLabel ?? '待公布', style: AppTheme.body),
+          if (selected != null)
+            Text(selected.statusDescription, style: AppTheme.bodySmall),
+          if (selected?.sourceUrl != null)
+            SelectableText(
+              '公告来源：${selected!.sourceUrl}',
+              style: AppTheme.bodySmall,
+            ),
+          if (selected?.publishedAt != null)
+            Text(
+              '公告日期：${selected!.publishedAt!.toIso8601String().substring(0, 10)}',
+              style: AppTheme.bodySmall,
+            ),
+          if (selected?.verifiedAt != null)
+            Text(
+              '核验日期：${selected!.verifiedAt!.toIso8601String().substring(0, 10)}',
+              style: AppTheme.bodySmall,
+            ),
+          const SizedBox(height: 12),
+        ],
+        ...events.map(_buildTimelineRow),
+        if (events.isEmpty) const Text('暂无时间信息', style: AppTheme.caption),
 
         const SizedBox(height: 80),
       ],
@@ -600,7 +650,15 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
                   color: AppTheme.textPrimary,
                 ),
               ),
-              Text(tl.periodDesc, style: AppTheme.caption),
+              Text(
+                '${ExamSession.statuses[tl.status] ?? '待核验'} · ${tl.periodDesc}',
+                style: AppTheme.caption,
+              ),
+              if (tl.status == 'confirmed' && tl.date != null)
+                Text(
+                  tl.date!.toIso8601String().substring(0, 10),
+                  style: AppTheme.body,
+                ),
             ],
           ),
         ],

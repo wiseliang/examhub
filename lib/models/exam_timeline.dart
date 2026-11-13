@@ -4,6 +4,9 @@ import 'dart:convert';
 class ExamTimeline {
   final int? id;
   final int examId;
+  final int? sessionId;
+  final String status;
+  final DateTime? verifiedAt;
   final String eventType; // 报名开始/报名截止/准考证打印/考试/出成绩
   final String periodDesc; // "每年6月" 或 "上半年/下半年"
   final DateTime? date; // 具体日期(如已知)
@@ -13,6 +16,9 @@ class ExamTimeline {
   const ExamTimeline({
     this.id,
     required this.examId,
+    this.sessionId,
+    this.status = 'estimated',
+    this.verifiedAt,
     required this.eventType,
     required this.periodDesc,
     this.date,
@@ -23,6 +29,9 @@ class ExamTimeline {
   factory ExamTimeline.fromMap(Map<String, dynamic> map) {
     return ExamTimeline(
       id: map['id'] as int?,
+      sessionId: map['session_id'] as int?,
+      status: map['status'] as String? ?? 'estimated',
+      verifiedAt: DateTime.tryParse(map['verified_at'] as String? ?? ''),
       examId: map['exam_id'] as int,
       eventType: map['event_type'] as String,
       periodDesc: map['period_desc'] as String,
@@ -36,6 +45,9 @@ class ExamTimeline {
     return {
       if (id != null) 'id': id,
       'exam_id': examId,
+      'session_id': sessionId,
+      'status': status,
+      'verified_at': verifiedAt?.toIso8601String(),
       'event_type': eventType,
       'period_desc': periodDesc,
       'date': date?.toIso8601String(),

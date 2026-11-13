@@ -225,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              periodDesc,
+              '${event['region']} · $periodDesc',
               style: AppTheme.caption,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

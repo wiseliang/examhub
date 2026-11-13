@@ -4,6 +4,8 @@ import 'package:path/path.dart';
 import '../models/exam.dart';
 import '../models/exam_timeline.dart';
 import 'seed_data.dart';
+import 'session_schema.dart';
+import '../models/exam_session.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -38,8 +40,14 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
-      onCreate: _onCreate,
+      version: 2,
+      onCreate: (db, version) async {
+        await _onCreate(db, 1);
+        await migrateSessions(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) await migrateSessions(db);
+      },
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -256,13 +264,86 @@ class DatabaseHelper {
 
   // ==================== 时间节点查询 ====================
 
+  Future<List<ExamSession>> getSessions(
+    int examId, {
+    int? year,
+    String? region,
+  }) async {
+    final db = await database;
+    final rows = await db.query(
+      'exam_session',
+      where:
+          'exam_id = ?${year == null ? '' : ' AND year = ?'}${region == null ? '' : ' AND region = ?'}',
+      whereArgs: [examId, ?year, ?region],
+      orderBy: 'year DESC, region ASC, id ASC',
+    );
+    return rows.map(ExamSession.fromMap).toList();
+  }
+
+  Future<int> saveSession(
+    ExamSession session,
+    List<ExamTimeline> timelines,
+  ) async {
+    session.validate();
+    for (final event in timelines) {
+      if (event.examId != session.examId) throw ArgumentError('节点与考试不一致');
+      final source = Uri.tryParse(event.sourceUrl ?? '');
+      if (!ExamSession.statuses.containsKey(event.status)) {
+        throw ArgumentError('未知节点状态');
+      }
+      if (event.status == 'confirmed' &&
+          (session.status != 'confirmed' ||
+              event.date == null ||
+              event.isEstimated ||
+              event.verifiedAt == null ||
+              source == null ||
+              !['http', 'https'].contains(source.scheme) ||
+              source.host.isEmpty)) {
+        throw ArgumentError('确定节点必须有核验日期和来源，且所属安排已核验');
+      }
+    }
+    final db = await database;
+    return db.transaction((txn) async {
+      final int id;
+      if (session.id == null) {
+        id = await txn.insert('exam_session', session.toMap());
+      } else {
+        id = session.id!;
+        final existing = await txn.query(
+          'exam_session',
+          where: 'id = ? AND exam_id = ?',
+          whereArgs: [id, session.examId],
+        );
+        if (existing.isEmpty) throw StateError('安排不存在或不属于此考试');
+        await txn.update(
+          'exam_session',
+          session.toMap(),
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        await txn.delete(
+          'exam_timeline',
+          where: 'session_id = ?',
+          whereArgs: [id],
+        );
+      }
+      for (final event in timelines) {
+        await txn.insert('exam_timeline', {
+          ...event.toMap()..remove('id'),
+          'session_id': id,
+        });
+      }
+      return id;
+    });
+  }
+
   /// 获取考试的时间节点
-  Future<List<ExamTimeline>> getTimelines(int examId) async {
+  Future<List<ExamTimeline>> getTimelines(int examId, {int? sessionId}) async {
     final db = await database;
     final maps = await db.query(
       'exam_timeline',
-      where: 'exam_id = ?',
-      whereArgs: [examId],
+      where: 'exam_id = ?${sessionId == null ? '' : ' AND session_id = ?'}',
+      whereArgs: [examId, ?sessionId],
       orderBy: 'date ASC',
     );
     return maps.map((m) => ExamTimeline.fromMap(m)).toList();
@@ -281,10 +362,15 @@ class DatabaseHelper {
 
     final result = await db.rawQuery(
       '''
-      SELECT et.*, e.name as exam_name, e.full_name as exam_full_name
+      SELECT et.*, e.name as exam_name, e.full_name as exam_full_name,
+             s.year, s.region, s.level, s.batch
       FROM exam_timeline et
+      JOIN exam_session s ON s.id = et.session_id
       JOIN exam e ON et.exam_id = e.id
       WHERE et.date IS NOT NULL
+        AND s.status = 'confirmed' AND et.status = 'confirmed'
+        AND et.is_estimated = 0 AND et.verified_at IS NOT NULL
+        AND et.source_url IS NOT NULL
         AND date(et.date) >= date(?)
         AND date(et.date) <= date(?)
       ORDER BY date(et.date) ASC, et.id ASC
@@ -436,7 +522,14 @@ class DatabaseHelper {
     await db.delete('browse_history');
     await db.delete('exam_notice');
     await db.delete('exam_timeline');
+    await db.delete('exam_session');
     await db.delete('exam');
     await SeedData.insertAll(db);
+    await db.execute(
+      "INSERT INTO exam_session(exam_id, region, batch, status) SELECT DISTINCT exam_id, '未注明地区', '旧版参考', 'estimated' FROM exam_timeline",
+    );
+    await db.execute(
+      'UPDATE exam_timeline SET session_id = (SELECT id FROM exam_session WHERE exam_session.exam_id = exam_timeline.exam_id)',
+    );
   }
 }
