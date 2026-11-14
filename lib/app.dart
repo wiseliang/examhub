@@ -33,7 +33,7 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   List<Widget> get _screens => [
-    const HomeScreen(),
+    HomeScreen(active: _currentIndex == 0, onBrowse: () => setState(() => _currentIndex = 1)),
     const DiscoverScreen(),
     ProfileScreen(active: _currentIndex == 2),
   ];
@@ -42,25 +42,13 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            activeIcon: Icon(Icons.home_filled),
-            label: '首页',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_rounded),
-            activeIcon: Icon(Icons.explore),
-            label: '发现',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            activeIcon: Icon(Icons.person),
-            label: '我的',
-          ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard_rounded), label: '备考'),
+          NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book_rounded), label: '考试库'),
+          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: '我的'),
         ],
       ),
     );

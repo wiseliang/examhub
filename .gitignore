@@ -34,3 +34,6 @@ ios/Flutter/Flutter.podspec
 # OS
 .DS_Store
 Thumbs.db
+
+# CI-only Chinese font for real Flutter preview tests
+.test-fonts/

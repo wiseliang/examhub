@@ -1,276 +1,64 @@
 import 'package:material_ui/material_ui.dart';
-
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
-import '../widgets/exam_card.dart';
+import '../widgets/ui_kit.dart';
 import '../widgets/exam_search_delegate.dart';
+import 'custom_exam_screen.dart';
+import 'discover_screen.dart';
 import 'exam_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
+  final VoidCallback? onBrowse;
+  final bool active;
+  const HomeScreen({super.key, this.onBrowse, this.active = true});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
 class _HomeScreenState extends State<HomeScreen> {
-  final DatabaseHelper _db = DatabaseHelper();
-
-  List<Exam> _hotExams = [];
-  List<Map<String, dynamic>> _upcomingEvents = [];
-  Set<int> _bookmarkedIds = {};
+  final _db = DatabaseHelper();
+  List<Exam> _exams = [], _followed = [];
   bool _loading = true;
-
+  String? _error;
   @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
+  void initState() {super.initState(); _load();}
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {super.didUpdateWidget(oldWidget); if (widget.active && !oldWidget.active) _load();}
+  Future<void> _load() async {
     try {
-      final hotExams = await _db.getHotExams(limit: 30);
-      final events = await _db.getUpcomingEvents(days: 60);
-
-      // 加载收藏状态
-      final bookmarked = <int>{};
-      for (final exam in hotExams) {
-        if (await _db.isBookmarked(exam.id)) {
-          bookmarked.add(exam.id);
-        }
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _hotExams = hotExams;
-        _upcomingEvents = events;
-        _bookmarkedIds = bookmarked;
-        _loading = false;
-      });
-    } catch (e) {
-      if (mounted) setState(() => _loading = false);
-      debugPrint('加载首页数据失败: $e');
-    }
+      final exams = await _db.getAllExams();
+      final followed = await _db.getFollowedExams();
+      if (mounted) setState(() {_exams = exams; _followed = followed; _loading = false; _error = null;});
+    } catch (_) {if (mounted) setState(() {_loading = false; _error = '考试资料读取失败，请重试。';});}
   }
-
+  Future<void> _detail(Exam exam) async {await Navigator.push(context, MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id))); if (mounted) await _load();}
+  Future<void> _add() async {await openCustomExam(context); if (mounted) await _load();}
+  void _browse() {if (widget.onBrowse != null) {widget.onBrowse!();} else {Navigator.push(context, MaterialPageRoute(builder: (_) => const DiscoverScreen()));}}
+  Future<void> _search() async {final exam = await showSearch<Exam?>(context: context, delegate: ExamSearchDelegate()); if (exam != null && mounted) await _detail(exam); else if (mounted) await _load();}
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('考试通'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_today_rounded),
-            onPressed: () {
-              // TODO: 打开考试日历
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () => _onSearch(context),
-          ),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              color: AppTheme.primaryColor,
-              child: CustomScrollView(
-                slivers: [
-                  // 考试日历横向滑动
-                  if (_upcomingEvents.isNotEmpty)
-                    SliverToBoxAdapter(child: _buildUpcomingEvents()),
-
-                  // Section标题
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppTheme.spacingMd,
-                        AppTheme.spacingMd,
-                        AppTheme.spacingMd,
-                        AppTheme.spacingSm,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.trending_up_rounded,
-                            size: 20,
-                            color: AppTheme.accentColor,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            '热门考试',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // 考试卡片Feed流
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final exam = _hotExams[index];
-                      return ExamCard(
-                        exam: exam,
-                        isBookmarked: _bookmarkedIds.contains(exam.id),
-                        onTap: () => _navigateToDetail(context, exam),
-                        onBookmark: () => _toggleBookmark(exam),
-                      );
-                    }, childCount: _hotExams.length),
-                  ),
-
-                  // 底部留白
-                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                ],
-              ),
-            ),
-    );
-  }
-
-  /// 近期考试事件横向滚动
-  Widget _buildUpcomingEvents() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppTheme.spacingMd,
-            AppTheme.spacingLg,
-            AppTheme.spacingMd,
-            AppTheme.spacingSm,
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.event_rounded, size: 18, color: AppTheme.warningColor),
-              SizedBox(width: 6),
-              Text(
-                '近期节点',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 100,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
-            itemCount: _upcomingEvents.length.clamp(0, 10),
-            separatorBuilder: (_, _) =>
-                const SizedBox(width: AppTheme.spacingSm),
-            itemBuilder: (context, index) {
-              final event = _upcomingEvents[index];
-              return _buildEventCard(event);
-            },
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacingMd),
+  Widget build(BuildContext context) => Scaffold(body: SafeArea(child: RefreshIndicator(onRefresh: _load, child: ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
+    Padding(padding: const EdgeInsets.fromLTRB(20, 18, 12, 0), child: Row(children: [const BrandMark(), const SizedBox(width: 10), const Text('考试通', style: AppTheme.heading3), const Spacer(), TextButton.icon(onPressed: _add, icon: const Icon(Icons.add_rounded, size: 18), label: const Text('添加考试'))])),
+    const PageHeading('你的下一场考试', '从了解考试，到开始准备。'),
+    Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Material(color: Colors.white, borderRadius: BorderRadius.circular(12), child: InkWell(onTap: _search, borderRadius: BorderRadius.circular(12), child: Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(border: Border.all(color: AppTheme.dividerColor), borderRadius: BorderRadius.circular(12)), child: const Row(children: [Icon(Icons.search_rounded, color: AppTheme.primaryColor), SizedBox(width: 12), Expanded(child: Text('搜索考试名称、行业', style: AppTheme.bodySmall))]))))),
+    const SizedBox(height: 20),
+    Container(margin: const EdgeInsets.symmetric(horizontal: 20), padding: const EdgeInsets.all(22), decoration: BoxDecoration(color: AppTheme.primaryColor, borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('我的备考', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 12),
+      if (_followed.isEmpty) ...[
+        const Text('先选一门想考的考试', style: TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 7),
+        const Text('关注后，考试资料和安排会集中在这里。', style: TextStyle(color: Color(0xFFDFE7FF), fontSize: 13, height: 1.6)),
+        const SizedBox(height: 18),
+        FilledButton(onPressed: _browse, style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppTheme.primaryColor), child: const Text('去选考试')),
+      ] else ...[
+        ..._followed.take(2).map((exam) => InkWell(onTap: () => _detail(exam), borderRadius: BorderRadius.circular(8), child: Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(exam.name, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)), const SizedBox(height: 5), Text(exam.targetDate == null ? '查看资料与考试安排' : '我的目标日 ${shortDate(exam.targetDate!)}', style: const TextStyle(color: Color(0xFFDFE7FF), fontSize: 13))])), const Icon(Icons.chevron_right_rounded, color: Colors.white)])))),
+        if (_followed.length > 2) Text('另有 ${_followed.length - 2} 门考试，可在“我的”查看。', style: const TextStyle(color: Colors.white, fontSize: 12)),
       ],
-    );
-  }
-
-  Widget _buildEventCard(Map<String, dynamic> event) {
-    final eventType = event['event_type'] as String? ?? '';
-    final examName = event['exam_name'] as String? ?? '';
-    final periodDesc = event['period_desc'] as String? ?? '';
-
-    final iconMap = {
-      'signup_start': '📝',
-      'signup_end': '⏰',
-      'admit_card': '🎫',
-      'exam': '📖',
-      'score': '📊',
-    };
-
-    return GestureDetector(
-      onTap: () {
-        final examId = event['exam_id'] as int?;
-        if (examId != null) {
-          _navigateToDetailById(context, examId);
-        }
-      },
-      child: Container(
-        width: 150,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.cardColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          boxShadow: AppTheme.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              iconMap[eventType] ?? '📌',
-              style: const TextStyle(fontSize: 20),
-            ),
-            const Spacer(),
-            Text(
-              examName,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '${event['region']} · $periodDesc',
-              style: AppTheme.caption,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 搜索
-  Future<void> _onSearch(BuildContext context) async {
-    final result = await showSearch<Exam?>(
-      context: context,
-      delegate: ExamSearchDelegate(),
-    );
-    if (result != null && context.mounted) {
-      _navigateToDetail(context, result);
-    }
-  }
-
-  /// 导航到考试详情
-  void _navigateToDetail(BuildContext context, Exam exam) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id)),
-    ).then((_) => _loadData()); // 返回时刷新（可能改变了收藏/关注状态）
-  }
-
-  void _navigateToDetailById(BuildContext context, int examId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: examId)),
-    ).then((_) => _loadData());
-  }
-
-  /// 切换收藏状态
-  Future<void> _toggleBookmark(Exam exam) async {
-    final isBookmarked = _bookmarkedIds.contains(exam.id);
-    if (isBookmarked) {
-      await _db.unbookmarkExam(exam.id);
-      setState(() => _bookmarkedIds.remove(exam.id));
-    } else {
-      await _db.bookmarkExam(exam.id);
-      setState(() => _bookmarkedIds.add(exam.id));
-    }
-  }
+    ])),
+    SectionHeading('考试目录', action: '查看全部', onTap: _browse),
+    if (_loading) const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator())) else if (_error != null) EmptyPanel(title: '暂时没能读取资料', message: _error!, action: '重新读取', onTap: _load) else ..._exams.where((e) => !e.isCustom).take(6).map((exam) => Column(children: [ExamRow(exam: exam, onTap: () => _detail(exam)), const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Divider())])),
+    const SizedBox(height: 24),
+    EmptyPanel(title: '没有找到要考的？', message: '升学、招聘、技能考试，都可以加入自己的备考列表。', action: '添加自己的考试', onTap: _add, icon: Icons.post_add_rounded),
+    const SizedBox(height: 28),
+  ]))));
 }

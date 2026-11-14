@@ -5,6 +5,7 @@ import '../models/exam.dart';
 import '../models/exam_timeline.dart';
 import 'seed_data.dart';
 import 'session_schema.dart';
+import 'custom_exam_schema.dart';
 import '../models/exam_session.dart';
 
 class DatabaseHelper {
@@ -40,13 +41,15 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _onCreate(db, 1);
         await migrateSessions(db);
+        await migrateCustomExams(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) await migrateSessions(db);
+        if (oldVersion < 3) await migrateCustomExams(db);
       },
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
@@ -148,8 +151,36 @@ class DatabaseHelper {
   /// 获取所有考试
   Future<List<Exam>> getAllExams() async {
     final db = await database;
-    final maps = await db.query('exam', orderBy: 'gold_content DESC');
+    final maps = await db.query('exam', orderBy: 'name COLLATE NOCASE ASC');
     return maps.map((m) => Exam.fromMap(m)).toList();
+  }
+
+  Future<int> addCustomExam({required String name, String industry = '其他考试', String officialWebsite = '', DateTime? targetDate}) async {
+    final title = name.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (title.isEmpty || title.length > 100) throw ArgumentError('考试名称应为 1 至 100 字');
+    final website = officialWebsite.trim();
+    if (website.isNotEmpty) {
+      final uri = Uri.tryParse(website);
+      if (uri == null || !['https', 'http'].contains(uri.scheme) || uri.host.isEmpty) throw ArgumentError('请填写完整的官网网址');
+    }
+    final db = await database;
+    return db.transaction((txn) async {
+      final all = await txn.query('exam', columns: ['id', 'name', 'full_name']);
+      final normalized = title.toLowerCase();
+      final existing = all.where((row) => ['name', 'full_name'].any((key) => (row[key] as String).trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase() == normalized)).firstOrNull;
+      final int id;
+      if (existing != null) {
+        id = existing['id'] as int;
+      } else {
+        final result = await txn.rawQuery('SELECT MIN(id) AS minimum FROM exam');
+        final minimum = result.first['minimum'] as int? ?? 0;
+        id = (minimum < 0 ? minimum : 0) - 1;
+        final exam = Exam(id: id, isCustom: true, targetDate: targetDate, name: title, fullName: title, category: '个人考试', industry: industry.trim().isEmpty ? '其他考试' : industry.trim(), targetGroups: const [], organizingBody: '', officialWebsite: website, difficulty: 1, goldContent: 0, description: '你添加的考试，可补充资料并开始备考。', eligibility: '报考条件待核对，请以官方公告为准。', examFormat: '待补充', subjects: const [], tags: const []);
+        await txn.insert('exam', exam.toMap());
+      }
+      await txn.insert('local_follow', {'exam_id': id}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      return id;
+    });
   }
 
   /// 按ID获取考试

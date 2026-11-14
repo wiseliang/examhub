@@ -28,6 +28,7 @@ void main() {
 
   setUp(() async {
     final db = await helper.database;
+    await db.delete('exam', where: "origin = 'custom'");
     for (final table in ['local_follow', 'local_bookmark', 'browse_history']) {
       await db.delete(table);
     }
@@ -133,7 +134,7 @@ void main() {
     await tester.pumpWidget(const ExamHubApp());
     await tester.pumpAndSettle();
     expect(find.text('考试通'), findsOneWidget);
-    expect(find.text('热门考试'), findsOneWidget);
+    expect(find.text('考试目录'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.search_rounded).first);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'CPA');
@@ -149,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('我的').last);
     await tester.pumpAndSettle();
-    expect(find.text('🔔 关注的考试'), findsOneWidget);
+    expect(find.text('关注的考试'), findsOneWidget);
     expect(find.text('CPA'), findsWidgets);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -164,7 +165,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('CPA').first);
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(ListView).first, const Offset(0, -1100));
+    await tester.tap(find.text('考试安排'));
     await tester.pumpAndSettle();
     final selector = find.byType(DropdownButtonFormField<int>);
     await tester.ensureVisible(selector);

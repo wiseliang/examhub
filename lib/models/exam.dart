@@ -3,6 +3,8 @@ import 'dart:convert';
 /// 考试核心数据模型
 class Exam {
   final int id;
+  final bool isCustom;
+  final DateTime? targetDate;
   final String name; // 简称，如 "CPA"
   final String fullName; // 全称，如 "注册会计师全国统一考试"
   final String category; // 准入类/水平评价类/国际认证/企业认证/技能等级
@@ -21,6 +23,8 @@ class Exam {
 
   const Exam({
     required this.id,
+    this.isCustom = false,
+    this.targetDate,
     required this.name,
     required this.fullName,
     required this.category,
@@ -42,6 +46,8 @@ class Exam {
   factory Exam.fromMap(Map<String, dynamic> map) {
     return Exam(
       id: map['id'] as int,
+      isCustom: map['origin'] == 'custom',
+      targetDate: DateTime.tryParse(map['target_date'] as String? ?? ''),
       name: map['name'] as String,
       fullName: map['full_name'] as String,
       category: map['category'] as String,
@@ -64,6 +70,8 @@ class Exam {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'origin': isCustom ? 'custom' : 'catalog',
+      'target_date': targetDate?.toIso8601String(),
       'name': name,
       'full_name': fullName,
       'category': category,

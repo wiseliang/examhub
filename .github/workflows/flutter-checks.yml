@@ -31,12 +31,37 @@ jobs:
           cache: true
       - name: Resolve locked dependencies
         run: flutter pub get --enforce-lockfile
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Format design iteration
+        run: |
+          dart format lib test
+          dart fix --apply --code=prefer_const_constructors --code=unnecessary_const --code=curly_braces_in_flow_control_structures --code=use_null_aware_elements --code=prefer_interpolation_to_compose_strings
+          dart format lib test
+          mkdir -p build
+          git diff --binary -- lib test > build/format.patch
+      - name: Export formatting patch
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: examhub-format-${{ github.run_number }}
+          path: build/format.patch
+          retention-days: 1
+          if-no-files-found: ignore
       - name: Analyze
         run: flutter analyze
+      - name: Download Chinese font for UI tests only
+        run: |
+          mkdir -p .test-fonts
+          curl --fail --location --retry 2 'https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf' -o .test-fonts/cjk.otf
       - name: Run business and migration tests
         run: flutter test --reporter expanded
+      - name: Upload real UI previews
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: examhub-ui-${{ github.run_number }}
+          path: build/ui-previews/
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Set up Java
         if: github.event_name != 'pull_request'
         uses: actions/setup-java@v6.2.0

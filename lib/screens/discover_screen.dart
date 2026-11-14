@@ -1,329 +1,68 @@
 import 'package:material_ui/material_ui.dart';
-
 import '../database/database_helper.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
-import '../widgets/category_selector.dart';
-import '../widgets/exam_card.dart';
-import '../widgets/exam_search_delegate.dart';
+import '../widgets/ui_kit.dart';
+import 'custom_exam_screen.dart';
 import 'exam_detail_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
-
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
 }
-
-class _DiscoverScreenState extends State<DiscoverScreen>
-    with SingleTickerProviderStateMixin {
-  final DatabaseHelper _db = DatabaseHelper();
-
-  // 筛选状态
-  String? _selectedCategory;
-  String? _selectedIndustry;
-  Set<String> _selectedTargetGroups = {};
-  String _sortBy = '含金量'; // 含金量/难度/热度
-
-  // 数据
-  List<Exam> _exams = [];
-  bool _loading = true;
-  bool _showFilterPanel = false;
-
-  // 分类常量
-  final List<String> _categories = [
-    '全部',
-    '准入类',
-    '水平评价类',
-    '国际认证',
-    '企业认证',
-    '技能等级认定',
-  ];
-
-  final List<String> _industries = [
-    '全部',
-    '财会金融',
-    '法律',
-    '建筑地产',
-    '医疗健康',
-    '教育培训',
-    'IT互联网',
-    '公共管理',
-  ];
-
-  final List<String> _targetGroups = ['在校生', '应届', '职场1-3年', '职场3-5年+'];
-
-  final List<String> _sortOptions = ['含金量', '难度', '名称'];
-
+class _DiscoverScreenState extends State<DiscoverScreen> {
+  final _search = TextEditingController();
+  List<Exam> _all = [];
+  String? _industry, _category, _targetGroup;
+  bool _customOnly = false, _loading = true;
+  String? _error;
   @override
-  void initState() {
-    super.initState();
-    _loadExams();
+  void initState() {super.initState(); _load();}
+  @override
+  void dispose() {_search.dispose(); super.dispose();}
+  Future<void> _load() async {
+    try {final exams = await DatabaseHelper().getAllExams(); if (mounted) setState(() {_all = exams; _loading = false; _error = null;});}
+    catch (_) {if (mounted) setState(() {_loading = false; _error = '资料读取失败，请重试。';});}
   }
-
-  Future<void> _loadExams() async {
-    setState(() => _loading = true);
-    try {
-      final results = await _db.filterExams(
-        category: _selectedCategory == '全部' ? null : _selectedCategory,
-        industry: _selectedIndustry == '全部' ? null : _selectedIndustry,
-        targetGroup: _selectedTargetGroups.isNotEmpty
-            ? _selectedTargetGroups.first
-            : null,
-      );
-
-      // 排序
-      switch (_sortBy) {
-        case '含金量':
-          results.sort((a, b) => b.goldContent.compareTo(a.goldContent));
-          break;
-        case '难度':
-          results.sort((a, b) => b.difficulty.compareTo(a.difficulty));
-          break;
-        case '名称':
-          results.sort((a, b) => a.name.compareTo(b.name));
-          break;
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _exams = results;
-        _loading = false;
-      });
-    } catch (e) {
-      debugPrint('加载发现页数据失败: $e');
-      if (mounted) setState(() => _loading = false);
-    }
+  Future<void> _add() async {await openCustomExam(context, initialName: _search.text.trim()); if (mounted) await _load();}
+  List<Exam> get _results {
+    final query = _search.text.trim().toLowerCase();
+    return _all.where((e) => (_industry == null || e.industry == _industry) && (_category == null || e.category == _category) && (_targetGroup == null || e.targetGroups.contains(_targetGroup)) && (!_customOnly || e.isCustom) && (query.isEmpty || [e.name, e.fullName, e.industry, e.organizingBody, e.description].any((s) => s.toLowerCase().contains(query)))).toList();
   }
-
+  Future<void> _filters() async {
+    final categories = _all.map((e) => e.category).toSet().toList()..sort();
+    final groups = _all.expand((e) => e.targetGroups).toSet().toList()..sort();
+    String category = _category ?? '', group = _targetGroup ?? '';
+    final result = await showModalBottomSheet<(String, String)>(context: context, isScrollControlled: true, builder: (context) => StatefulBuilder(builder: (context, update) => SafeArea(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Text('筛选考试', style: AppTheme.heading2), const SizedBox(height: 24),
+      DropdownButtonFormField<String>(initialValue: category, decoration: const InputDecoration(labelText: '考试类型'), items: [const DropdownMenuItem(value: '', child: Text('全部类型')), ...categories.map((item) => DropdownMenuItem(value: item, child: Text(item)))], onChanged: (value) => update(() => category = value ?? '')),
+      const SizedBox(height: 16),
+      DropdownButtonFormField<String>(initialValue: group, decoration: const InputDecoration(labelText: '适用人群'), items: [const DropdownMenuItem(value: '', child: Text('全部人群')), ...groups.map((item) => DropdownMenuItem(value: item, child: Text(item)))], onChanged: (value) => update(() => group = value ?? '')),
+      const SizedBox(height: 24),
+      FilledButton(onPressed: () => Navigator.pop(context, (category, group)), child: const Text('应用筛选')),
+      TextButton(onPressed: () => Navigator.pop(context, ('', '')), child: const Text('清除筛选')),
+    ])))));
+    if (result != null && mounted) setState(() {_category = result.$1.isEmpty ? null : result.$1; _targetGroup = result.$2.isEmpty ? null : result.$2;});
+  }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('发现'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _showFilterPanel ? Icons.filter_list_off : Icons.filter_list,
-              color: _showFilterPanel
-                  ? AppTheme.primaryColor
-                  : AppTheme.textSecondary,
-            ),
-            onPressed: () =>
-                setState(() => _showFilterPanel = !_showFilterPanel),
-          ),
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () => _onSearch(context),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 行业分类选择器
-          CategorySelector(
-            items: _industries,
-            selectedItem: _selectedIndustry ?? '全部',
-            onSelected: (industry) {
-              setState(
-                () => _selectedIndustry = industry == '全部' ? null : industry,
-              );
-              _loadExams();
-            },
-          ),
-
-          const SizedBox(height: AppTheme.spacingSm),
-
-          // 类别选择器
-          CategorySelector(
-            items: _categories,
-            selectedItem: _selectedCategory ?? '全部',
-            onSelected: (category) {
-              setState(
-                () => _selectedCategory = category == '全部' ? null : category,
-              );
-              _loadExams();
-            },
-          ),
-
-          // 展开的筛选面板
-          if (_showFilterPanel) _buildFilterPanel(),
-
-          // 结果统计 + 排序
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacingMd,
-              AppTheme.spacingSm,
-              AppTheme.spacingMd,
-              AppTheme.spacingSm,
-            ),
-            child: Row(
-              children: [
-                Text('共 ${_exams.length} 个考试', style: AppTheme.bodySmall),
-                const Spacer(),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _sortBy,
-                    isDense: true,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.primaryColor,
-                    ),
-                    items: _sortOptions
-                        .map(
-                          (s) =>
-                              DropdownMenuItem(value: s, child: Text('按$s排序')),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _sortBy = value);
-                        _loadExams();
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 考试列表
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _exams.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: _loadExams,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 80),
-                      itemCount: _exams.length,
-                      itemBuilder: (context, index) {
-                        final exam = _exams[index];
-                        return ExamCard(
-                          exam: exam,
-                          onTap: () => _navigateToDetail(context, exam),
-                        );
-                      },
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterPanel() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMd),
-      decoration: BoxDecoration(
-        color: AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('适用人群', style: AppTheme.bodySmall),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _targetGroups.map((group) {
-              final isSelected = _selectedTargetGroups.contains(group);
-              return GestureDetector(
-                onTap: () {
-                  if (!mounted) return;
-                  setState(() {
-                    if (isSelected) {
-                      _selectedTargetGroups.remove(group);
-                    } else {
-                      _selectedTargetGroups = {group}; // 单选
-                    }
-                  });
-                  _loadExams();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.primaryColor.withValues(alpha: 0.1)
-                        : AppTheme.backgroundColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.primaryColor
-                          : AppTheme.dividerColor,
-                    ),
-                  ),
-                  child: Text(
-                    group,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isSelected
-                          ? AppTheme.primaryColor
-                          : AppTheme.textSecondary,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.search_off_rounded,
-            size: 64,
-            color: AppTheme.textLight,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '没有找到匹配的考试',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () {
-              if (!mounted) return;
-              setState(() {
-                _selectedCategory = null;
-                _selectedIndustry = null;
-                _selectedTargetGroups = {};
-              });
-              _loadExams();
-            },
-            child: const Text('清除所有筛选'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _onSearch(BuildContext context) async {
-    final result = await showSearch<Exam?>(
-      context: context,
-      delegate: ExamSearchDelegate(),
-    );
-    if (result != null && context.mounted) {
-      _navigateToDetail(context, result);
-    }
-  }
-
-  void _navigateToDetail(BuildContext context, Exam exam) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id)),
-    ).then((_) => _loadExams());
+    final industries = _all.map((e) => e.industry).toSet().toList()..sort();
+    final results = _results;
+    return Scaffold(body: SafeArea(child: Column(children: [
+      PageHeading('考试库', '找到适合自己的方向。', trailing: IconButton(tooltip: '添加考试', onPressed: _add, icon: const Icon(Icons.add_rounded))),
+      Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: TextField(controller: _search, onChanged: (_) => setState(() {}), decoration: InputDecoration(hintText: '搜索考试名称、行业', prefixIcon: const Icon(Icons.search_rounded), suffixIcon: _search.text.isEmpty ? null : IconButton(tooltip: '清除搜索', icon: const Icon(Icons.close_rounded), onPressed: () => setState(_search.clear))))),
+      const SizedBox(height: 14),
+      SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 20), child: Row(children: [ChoiceChip(label: const Text('全部'), selected: _industry == null, onSelected: (_) => setState(() => _industry = null)), const SizedBox(width: 8), ...industries.map((industry) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(industry), selected: _industry == industry, onSelected: (_) => setState(() => _industry = _industry == industry ? null : industry))))])),
+      Padding(padding: const EdgeInsets.fromLTRB(20, 6, 12, 6), child: Row(children: [Text('找到 ${results.length} 门考试', style: AppTheme.bodySmall), const Spacer(), TextButton.icon(onPressed: _filters, icon: const Icon(Icons.tune_rounded, size: 16), label: Text(_category != null || _targetGroup != null ? '已筛选' : '筛选')), FilterChip(label: const Text('我添加的'), selected: _customOnly, onSelected: (value) => setState(() => _customOnly = value))])),
+      Expanded(child: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(onRefresh: _load, child: ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
+        if (_error != null) EmptyPanel(title: '暂时无法显示考试', message: _error!, action: '重新读取', onTap: _load)
+        else if (results.isEmpty) Padding(padding: const EdgeInsets.only(top: 24), child: EmptyPanel(title: _search.text.isEmpty ? '这个范围还没有考试' : '没有找到“${_search.text.trim()}”', message: '可以调整筛选，也可以自己添加，先开始准备。', action: '添加这个考试', onTap: _add, icon: Icons.search_off_rounded))
+        else ...results.map((exam) => Column(children: [ExamRow(exam: exam, onTap: () async {await Navigator.push(context, MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: exam.id))); if (mounted) await _load();}), const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Divider())])),
+        const SizedBox(height: 24),
+        if (results.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: OutlinedButton.icon(onPressed: _add, icon: const Icon(Icons.add_rounded), label: const Text('目录里没有？添加自己的考试'))),
+        const SizedBox(height: 24),
+      ]))),
+    ])));
   }
 }
