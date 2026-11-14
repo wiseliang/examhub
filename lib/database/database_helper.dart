@@ -1,8 +1,12 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import '../models/exam.dart';
 import '../models/exam_timeline.dart';
 import 'seed_data.dart';
+import 'session_schema.dart';
+import 'custom_exam_schema.dart';
+import '../models/exam_session.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -10,11 +14,25 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+  static Future<Database>? _opening;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    // 首页、发现和个人页会同时读取，必须共用一次初始化。
+    _opening ??= _initDatabase();
+    try {
+      _database = await _opening!;
+      return _database!;
+    } finally {
+      _opening = null;
+    }
+  }
+
+  Future<void> close() async {
+    final db = _database ?? (await _opening);
+    await db?.close();
+    _database = null;
+    _opening = null;
   }
 
   Future<Database> _initDatabase() async {
@@ -23,11 +41,27 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
-      onCreate: _onCreate,
+      version: 4,
+      onCreate: (db, version) async {
+        await _onCreate(db, 1);
+        await migrateSessions(db);
+        await migrateCustomExams(db);
+        await _createAssistantState(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) await migrateSessions(db);
+        if (oldVersion < 3) await migrateCustomExams(db);
+        if (oldVersion < 4) await _createAssistantState(db);
+      },
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
+    );
+  }
+
+  Future<void> _createAssistantState(Database db) async {
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS assistant_state (id TEXT PRIMARY KEY, body TEXT NOT NULL)',
     );
   }
 
@@ -125,8 +159,146 @@ class DatabaseHelper {
   /// 获取所有考试
   Future<List<Exam>> getAllExams() async {
     final db = await database;
-    final maps = await db.query('exam', orderBy: 'gold_content DESC');
+    final maps = await db.query('exam', orderBy: 'name COLLATE NOCASE ASC');
     return maps.map((m) => Exam.fromMap(m)).toList();
+  }
+
+  Future<int> addCustomExam({
+    required String name,
+    String industry = '其他考试',
+    String officialWebsite = '',
+    DateTime? targetDate,
+  }) async {
+    final title = name.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (title.isEmpty || title.length > 100) {
+      throw ArgumentError('考试名称应为 1 至 100 字');
+    }
+    final website = officialWebsite.trim();
+    if (website.isNotEmpty) {
+      final uri = Uri.tryParse(website);
+      if (uri == null ||
+          !['https', 'http'].contains(uri.scheme) ||
+          uri.host.isEmpty) {
+        throw ArgumentError('请填写完整的官网网址');
+      }
+    }
+    final db = await database;
+    return db.transaction((txn) async {
+      final all = await txn.query('exam', columns: ['id', 'name', 'full_name']);
+      final normalized = title.toLowerCase();
+      final existing = all
+          .where(
+            (row) => ['name', 'full_name'].any(
+              (key) =>
+                  (row[key] as String)
+                      .trim()
+                      .replaceAll(RegExp(r'\s+'), ' ')
+                      .toLowerCase() ==
+                  normalized,
+            ),
+          )
+          .firstOrNull;
+      final int id;
+      if (existing != null) {
+        id = existing['id'] as int;
+      } else {
+        final result = await txn.rawQuery(
+          'SELECT MIN(id) AS minimum FROM exam',
+        );
+        final minimum = result.first['minimum'] as int? ?? 0;
+        id = (minimum < 0 ? minimum : 0) - 1;
+        final exam = Exam(
+          id: id,
+          isCustom: true,
+          targetDate: targetDate,
+          name: title,
+          fullName: title,
+          category: '个人考试',
+          industry: industry.trim().isEmpty ? '其他考试' : industry.trim(),
+          targetGroups: const [],
+          organizingBody: '',
+          officialWebsite: website,
+          difficulty: 1,
+          goldContent: 0,
+          description: '你添加的考试，可补充资料并开始备考。',
+          eligibility: '报考条件待核对，请以官方公告为准。',
+          examFormat: '待补充',
+          subjects: const [],
+          tags: const [],
+        );
+        await txn.insert('exam', exam.toMap());
+      }
+      await txn.insert('local_follow', {
+        'exam_id': id,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      return id;
+    });
+  }
+
+  Future<void> updateCustomExam({
+    required int id,
+    required String name,
+    required String industry,
+    required String officialWebsite,
+    DateTime? targetDate,
+  }) async {
+    final title = name.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (title.isEmpty || title.length > 100) {
+      throw ArgumentError('请填写 1 至 100 字的考试名称');
+    }
+    final website = officialWebsite.trim();
+    final uri = Uri.tryParse(website);
+    if (website.isNotEmpty &&
+        (uri == null ||
+            !['http', 'https'].contains(uri.scheme) ||
+            uri.host.isEmpty)) {
+      throw ArgumentError('请填写完整的官网网址');
+    }
+    final db = await database;
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'exam',
+        where: 'id = ? AND origin = ?',
+        whereArgs: [id, 'custom'],
+      );
+      if (rows.isEmpty) throw StateError('只能编辑自己添加的考试');
+      final others = await txn.query(
+        'exam',
+        columns: ['id', 'name', 'full_name'],
+        where: 'id != ?',
+        whereArgs: [id],
+      );
+      if (others.any(
+        (row) => ['name', 'full_name'].any(
+          (key) =>
+              (row[key] as String).trim().toLowerCase() == title.toLowerCase(),
+        ),
+      )) {
+        throw ArgumentError('已有同名考试，请使用不同的名称');
+      }
+      await txn.update(
+        'exam',
+        {
+          'name': title,
+          'full_name': title,
+          'industry': industry.trim().isEmpty ? '其他考试' : industry.trim(),
+          'official_website': website,
+          'target_date': targetDate?.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
+  }
+
+  Future<void> deleteCustomExam(int id) async {
+    final db = await database;
+    final count = await db.delete(
+      'exam',
+      where: 'id = ? AND origin = ?',
+      whereArgs: [id, 'custom'],
+    );
+    if (count == 0) throw StateError('只能删除自己添加的考试');
   }
 
   /// 按ID获取考试
@@ -143,10 +315,9 @@ class DatabaseHelper {
     final like = '%$query%';
     final maps = await db.query(
       'exam',
-      where:
-          'name LIKE ? OR full_name LIKE ? OR description LIKE ? OR industry LIKE ? OR organizing_body LIKE ?',
+      where: 'name LIKE ? OR full_name LIKE ? OR description LIKE ? OR industry LIKE ? OR organizing_body LIKE ?',
       whereArgs: [like, like, like, like, like],
-      orderBy: 'gold_content DESC',
+      orderBy: 'name COLLATE NOCASE ASC',
     );
     return maps.map((m) => Exam.fromMap(m)).toList();
   }
@@ -189,8 +360,7 @@ class DatabaseHelper {
       whereArgs.add(minGoldContent);
     }
 
-    final where =
-        whereClauses.isNotEmpty ? whereClauses.join(' AND ') : null;
+    final where = whereClauses.isNotEmpty ? whereClauses.join(' AND ') : null;
 
     final maps = await db.query(
       'exam',
@@ -226,7 +396,10 @@ class DatabaseHelper {
   }
 
   /// 按人群获取推荐考试
-  Future<List<Exam>> getExamsByTargetGroup(String group, {int limit = 20}) async {
+  Future<List<Exam>> getExamsByTargetGroup(
+    String group, {
+    int limit = 20,
+  }) async {
     final db = await database;
     final maps = await db.query(
       'exam',
@@ -240,34 +413,119 @@ class DatabaseHelper {
 
   // ==================== 时间节点查询 ====================
 
+  Future<List<ExamSession>> getSessions(
+    int examId, {
+    int? year,
+    String? region,
+  }) async {
+    final db = await database;
+    final rows = await db.query(
+      'exam_session',
+      where:
+          'exam_id = ?${year == null ? '' : ' AND year = ?'}${region == null ? '' : ' AND region = ?'}',
+      whereArgs: [examId, ?year, ?region],
+      orderBy: 'year DESC, region ASC, id ASC',
+    );
+    return rows.map(ExamSession.fromMap).toList();
+  }
+
+  Future<int> saveSession(
+    ExamSession session,
+    List<ExamTimeline> timelines,
+  ) async {
+    session.validate();
+    for (final event in timelines) {
+      if (event.examId != session.examId) throw ArgumentError('节点与考试不一致');
+      final source = Uri.tryParse(event.sourceUrl ?? '');
+      if (!ExamSession.statuses.containsKey(event.status)) {
+        throw ArgumentError('未知节点状态');
+      }
+      if (event.status == 'confirmed' &&
+          (session.status != 'confirmed' ||
+              event.date == null ||
+              event.isEstimated ||
+              event.verifiedAt == null ||
+              source == null ||
+              !['http', 'https'].contains(source.scheme) ||
+              source.host.isEmpty)) {
+        throw ArgumentError('确定节点必须有核验日期和来源，且所属安排已核验');
+      }
+    }
+    final db = await database;
+    return db.transaction((txn) async {
+      final int id;
+      if (session.id == null) {
+        id = await txn.insert('exam_session', session.toMap());
+      } else {
+        id = session.id!;
+        final existing = await txn.query(
+          'exam_session',
+          where: 'id = ? AND exam_id = ?',
+          whereArgs: [id, session.examId],
+        );
+        if (existing.isEmpty) throw StateError('安排不存在或不属于此考试');
+        await txn.update(
+          'exam_session',
+          session.toMap(),
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        await txn.delete(
+          'exam_timeline',
+          where: 'session_id = ?',
+          whereArgs: [id],
+        );
+      }
+      for (final event in timelines) {
+        await txn.insert('exam_timeline', {
+          ...event.toMap()..remove('id'),
+          'session_id': id,
+        });
+      }
+      return id;
+    });
+  }
+
   /// 获取考试的时间节点
-  Future<List<ExamTimeline>> getTimelines(int examId) async {
+  Future<List<ExamTimeline>> getTimelines(int examId, {int? sessionId}) async {
     final db = await database;
     final maps = await db.query(
       'exam_timeline',
-      where: 'exam_id = ?',
-      whereArgs: [examId],
+      where: 'exam_id = ?${sessionId == null ? '' : ' AND session_id = ?'}',
+      whereArgs: [examId, ?sessionId],
       orderBy: 'date ASC',
     );
     return maps.map((m) => ExamTimeline.fromMap(m)).toList();
   }
 
   /// 获取近期事件
-  Future<List<Map<String, dynamic>>> getUpcomingEvents({int days = 30}) async {
+  Future<List<Map<String, dynamic>>> getUpcomingEvents({
+    int days = 30,
+    DateTime? from,
+  }) async {
     final db = await database;
-    final targetDate =
-        DateTime.now().add(Duration(days: days)).toIso8601String();
-    final now = DateTime.now().toIso8601String();
+    final current = from ?? DateTime.now();
+    final today = DateTime.utc(current.year, current.month, current.day);
+    final targetDate = today.add(Duration(days: days)).toIso8601String();
+    final now = today.toIso8601String();
 
-    final result = await db.rawQuery('''
-      SELECT et.*, e.name as exam_name, e.full_name as exam_full_name
+    final result = await db.rawQuery(
+      '''
+      SELECT et.*, e.name as exam_name, e.full_name as exam_full_name,
+             s.year, s.region, s.level, s.batch
       FROM exam_timeline et
+      JOIN exam_session s ON s.id = et.session_id
       JOIN exam e ON et.exam_id = e.id
       WHERE et.date IS NOT NULL
-        AND et.date >= ?
-        AND et.date <= ?
-      ORDER BY et.date ASC
-    ''', [now, targetDate]);
+        AND s.status = 'confirmed' AND et.status = 'confirmed'
+        AND et.is_estimated = 0 AND et.verified_at IS NOT NULL
+        AND et.source_url IS NOT NULL
+        AND date(et.date) >= date(?)
+        AND date(et.date) <= date(?)
+      ORDER BY date(et.date) ASC, et.id ASC
+    ''',
+      [now, targetDate],
+    );
 
     return result;
   }
@@ -289,7 +547,8 @@ class DatabaseHelper {
   // ==================== 关注/收藏/历史 ====================
 
   /// 关注考试
-  Future<void> followExam(int examId, {
+  Future<void> followExam(
+    int examId, {
     bool remindSignup = true,
     bool remindExam = true,
     bool remindScore = true,
@@ -333,11 +592,9 @@ class DatabaseHelper {
   /// 收藏考试
   Future<void> bookmarkExam(int examId) async {
     final db = await database;
-    await db.insert(
-      'local_bookmark',
-      {'exam_id': examId},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('local_bookmark', {
+      'exam_id': examId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 取消收藏
@@ -375,7 +632,11 @@ class DatabaseHelper {
   Future<void> recordBrowse(int examId) async {
     final db = await database;
     // 清理旧的重复记录
-    await db.delete('browse_history', where: 'exam_id = ?', whereArgs: [examId]);
+    await db.delete(
+      'browse_history',
+      where: 'exam_id = ?',
+      whereArgs: [examId],
+    );
     await db.insert('browse_history', {
       'exam_id': examId,
       'viewed_at': DateTime.now().toIso8601String(),
@@ -385,13 +646,21 @@ class DatabaseHelper {
   /// 获取浏览历史
   Future<List<Exam>> getBrowseHistory({int limit = 50}) async {
     final db = await database;
-    final maps = await db.rawQuery('''
+    final maps = await db.rawQuery(
+      '''
       SELECT DISTINCT e.* FROM exam e
       INNER JOIN browse_history h ON e.id = h.exam_id
       ORDER BY h.viewed_at DESC
       LIMIT ?
-    ''', [limit]);
+    ''',
+      [limit],
+    );
     return maps.map((m) => Exam.fromMap(m)).toList();
+  }
+
+  Future<void> clearBrowseHistory() async {
+    final db = await database;
+    await db.delete('browse_history');
   }
 
   /// 重置数据库
@@ -402,7 +671,14 @@ class DatabaseHelper {
     await db.delete('browse_history');
     await db.delete('exam_notice');
     await db.delete('exam_timeline');
+    await db.delete('exam_session');
     await db.delete('exam');
     await SeedData.insertAll(db);
+    await db.execute(
+      "INSERT INTO exam_session(exam_id, region, batch, status) SELECT DISTINCT exam_id, '未注明地区', '旧版参考', 'estimated' FROM exam_timeline",
+    );
+    await db.execute(
+      'UPDATE exam_timeline SET session_id = (SELECT id FROM exam_session WHERE exam_session.exam_id = exam_timeline.exam_id)',
+    );
   }
 }

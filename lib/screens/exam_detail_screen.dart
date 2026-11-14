@@ -1,603 +1,568 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
+import '../models/exam_session.dart';
 import '../models/exam_timeline.dart';
+import '../services/external_actions.dart';
 import '../theme/app_theme.dart';
+import '../widgets/ui_kit.dart';
+import 'custom_exam_screen.dart';
+import 'assistant_screen.dart';
 
 class ExamDetailScreen extends StatefulWidget {
   final int examId;
-
   const ExamDetailScreen({super.key, required this.examId});
-
   @override
   State<ExamDetailScreen> createState() => _ExamDetailScreenState();
 }
 
 class _ExamDetailScreenState extends State<ExamDetailScreen>
     with SingleTickerProviderStateMixin {
-  final DatabaseHelper _db = DatabaseHelper();
-
+  final _db = DatabaseHelper();
+  late final TabController _tabs;
   Exam? _exam;
+  List<ExamSession> _sessions = [];
   List<ExamTimeline> _timelines = [];
   List<ExamNotice> _notices = [];
-  bool _isFollowing = false;
-  bool _isBookmarked = false;
-  bool _loading = true;
-  late TabController _tabController;
-
+  int? _selectedSession;
+  bool _following = false, _bookmarked = false, _loading = true, _busy = false;
+  String? _error;
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _loadData();
+    _tabs = TabController(length: 3, vsync: this);
+    _load();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabs.dispose();
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
+  Future<void> _load() async {
     try {
       final exam = await _db.getExamById(widget.examId);
+      final sessions = await _db.getSessions(widget.examId);
       final timelines = await _db.getTimelines(widget.examId);
       final notices = await _db.getNotices(widget.examId);
-      final isFollowing = await _db.isFollowing(widget.examId);
-      final isBookmarked = await _db.isBookmarked(widget.examId);
-
-      // 记录浏览历史
-      await _db.recordBrowse(widget.examId);
-
-      setState(() {
-        _exam = exam;
-        _timelines = timelines;
-        _notices = notices;
-        _isFollowing = isFollowing;
-        _isBookmarked = isBookmarked;
-        _loading = false;
-      });
-    } catch (e) {
-      debugPrint('加载考试详情失败: $e');
-      setState(() => _loading = false);
+      final following = await _db.isFollowing(widget.examId),
+          bookmarked = await _db.isBookmarked(widget.examId);
+      if (exam != null) await _db.recordBrowse(widget.examId);
+      if (mounted) {
+        setState(() {
+          _exam = exam;
+          _sessions = sessions;
+          _timelines = timelines;
+          _notices = notices;
+          _selectedSession = sessions.firstOrNull?.id;
+          _following = following;
+          _bookmarked = bookmarked;
+          _loading = false;
+          _error = null;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = '资料读取失败，请重试。';
+        });
+      }
     }
   }
 
+  Future<void> _follow() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      if (_following) {
+        await _db.unfollowExam(widget.examId);
+      } else {
+        await _db.followExam(widget.examId);
+      }
+      if (mounted) setState(() => _following = !_following);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('关注状态未保存，请重试。')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _bookmark() async {
+    try {
+      if (_bookmarked) {
+        await _db.unbookmarkExam(widget.examId);
+      } else {
+        await _db.bookmarkExam(widget.examId);
+      }
+      if (mounted) setState(() => _bookmarked = !_bookmarked);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('收藏未保存，请重试。')));
+      }
+    }
+  }
+
+  Future<void> _manage(String action) async {
+    final exam = _exam;
+    if (exam == null || !exam.isCustom) return;
+    if (action == 'edit') {
+      await Navigator.push<int>(
+        context,
+        MaterialPageRoute(builder: (_) => CustomExamScreen(existing: exam)),
+      );
+      if (mounted) await _load();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除这门个人考试？'),
+        content: const Text('会同时移除本机的关注、收藏和浏览记录。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('保留'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _db.deleteCustomExam(exam.id);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('删除未完成，请重试。')));
+      }
+    }
+  }
+
+  Widget _section(String title, Widget child) => Padding(
+    padding: const EdgeInsets.only(bottom: 26),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: AppTheme.heading3),
+        const SizedBox(height: 10),
+        child,
+      ],
+    ),
+  );
   @override
   Widget build(BuildContext context) {
+    final exam = _exam;
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('加载中...')),
+        appBar: AppBar(title: const Text('考试档案')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-
-    if (_exam == null) {
+    if (exam == null || _error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('考试详情')),
-        body: const Center(child: Text('未找到该考试信息')),
+        appBar: AppBar(title: const Text('考试档案')),
+        body: Center(
+          child: EmptyPanel(
+            title: '暂时无法显示考试',
+            message: _error ?? '这份考试档案不存在。',
+            action: '重新读取',
+            onTap: _load,
+          ),
+        ),
       );
     }
-
-    final exam = _exam!;
-    final industryColor = AppTheme.getIndustryColor(exam.industry);
-
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              expandedHeight: 200,
-              pinned: true,
-              backgroundColor: Colors.white,
-              title: Text(exam.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  )),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        industryColor.withValues(alpha: 0.15),
-                        industryColor.withValues(alpha: 0.05),
-                      ],
-                    ),
-                  ),
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 56, 24, 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(exam.fullName,
-                              style: AppTheme.heading3),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              _buildStars(exam.goldContent),
-                              const SizedBox(width: 8),
-                              Text('${exam.goldContent} 含金量',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.accentColor,
-                                  )),
-                              const SizedBox(width: 16),
-                              Icon(Icons.school,
-                                  size: 14, color: AppTheme.textLight),
-                              const SizedBox(width: 4),
-                              Text('难度 ${exam.difficulty}/5',
-                                  style: AppTheme.caption),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    _isBookmarked
-                        ? Icons.bookmark
-                        : Icons.bookmark_border,
-                    color:
-                        _isBookmarked ? AppTheme.accentColor : Colors.white70,
-                  ),
-                  onPressed: _toggleBookmark,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.share_rounded),
-                  onPressed: () {
-                    // TODO: 分享功能
-                  },
-                ),
-              ],
-              bottom: TabBar(
-                controller: _tabController,
-                labelColor: AppTheme.primaryColor,
-                unselectedLabelColor: AppTheme.textLight,
-                indicatorColor: AppTheme.primaryColor,
-                tabs: const [
-                  Tab(text: '概览'),
-                  Tab(text: '通知'),
-                  Tab(text: '数据'),
-                ],
+      appBar: AppBar(
+        title: const Text('考试档案'),
+        actions: [
+          IconButton(
+            tooltip: '让助手规划备考',
+            icon: const Icon(Icons.travel_explore),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AssistantScreen(initialExam: exam.fullName),
               ),
             ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildOverviewTab(exam),
-            _buildNoticesTab(),
-            _buildDataTab(exam),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomBar(exam),
-    );
-  }
-
-  // ==================== Tab: 概览 ====================
-
-  Widget _buildOverviewTab(Exam exam) {
-    return ListView(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      children: [
-        // 标签行
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildInfoTag(exam.category, AppTheme.getCategoryColor(exam.category)),
-            _buildInfoTag(exam.industry, AppTheme.getIndustryColor(exam.industry)),
-            ...exam.targetGroups
-                .map((g) => _buildInfoTag(g, AppTheme.primaryColor)),
-          ],
-        ),
-
-        const SizedBox(height: AppTheme.spacingLg),
-
-        // 简介
-        _buildSectionTitle('📋 考试简介'),
-        const SizedBox(height: 8),
-        Text(exam.description, style: AppTheme.body),
-        const SizedBox(height: AppTheme.spacingLg),
-
-        // 主办单位
-        _buildSectionTitle('🏛️ 主办单位'),
-        const SizedBox(height: 4),
-        Text(exam.organizingBody, style: AppTheme.body),
-        if (exam.officialWebsite.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text('官网: ${exam.officialWebsite}',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.primaryColor,
-                decoration: TextDecoration.underline,
-              )),
+          ),
+          if (exam.isCustom)
+            PopupMenuButton<String>(
+              tooltip: '管理个人考试',
+              onSelected: _manage,
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('编辑个人考试')),
+                PopupMenuItem(value: 'delete', child: Text('删除个人考试')),
+              ],
+            ),
+          IconButton(
+            tooltip: _bookmarked ? '取消收藏' : '收藏考试',
+            onPressed: _bookmark,
+            icon: Icon(
+              _bookmarked
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_outline_rounded,
+              color: AppTheme.primaryColor,
+            ),
+          ),
         ],
-
-        const SizedBox(height: AppTheme.spacingLg),
-
-        // 报名条件
-        _buildSectionTitle('✅ 报名条件'),
-        const SizedBox(height: 8),
-        Text(exam.eligibility, style: AppTheme.body),
-
-        const SizedBox(height: AppTheme.spacingLg),
-
-        // 考试科目
-        _buildSectionTitle('📝 考试科目'),
-        const SizedBox(height: 8),
-        if (exam.subjects.isNotEmpty)
-          ...exam.subjects.map((subject) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Row(
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Icon(
-                      subject.format == '机考'
-                          ? Icons.computer_rounded
-                          : subject.format == '面试'
-                              ? Icons.people_rounded
-                              : Icons.edit_rounded,
-                      size: 18,
-                      color: AppTheme.primaryColor,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(subject.name,
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ))),
-                    Text('${subject.duration}分钟',
-                        style: AppTheme.caption),
+                    StatePill(exam.isCustom ? '个人添加' : exam.industry),
+                    if (!exam.isCustom) const StatePill('资料待核验'),
                   ],
                 ),
-              )),
-
-        const SizedBox(height: AppTheme.spacingLg),
-
-        // 时间节点
-        _buildSectionTitle('📅 考试时间节点'),
-        const SizedBox(height: 8),
-        if (_timelines.isNotEmpty)
-          ..._timelines.map((tl) => _buildTimelineRow(tl)),
-
-        if (_timelines.isEmpty)
-          Text('暂无时间信息', style: AppTheme.caption),
-
-        const SizedBox(height: 80),
-      ],
-    );
-  }
-
-  // ==================== Tab: 通知 ====================
-
-  Widget _buildNoticesTab() {
-    if (_notices.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.notifications_off_rounded,
-                size: 48, color: AppTheme.textLight),
-            const SizedBox(height: 12),
-            const Text('暂无官方通知',
-                style: TextStyle(color: AppTheme.textSecondary)),
-            const SizedBox(height: 4),
-            Text('官方通知将在此显示',
-                style: AppTheme.caption),
-          ],
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      itemCount: _notices.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final notice = _notices[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.cardColor,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            boxShadow: AppTheme.cardShadow,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(notice.title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15)),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${notice.publishDate.year}-${notice.publishDate.month.toString().padLeft(2, '0')}-${notice.publishDate.day.toString().padLeft(2, '0')}',
-                    style: AppTheme.caption,
-                  ),
-                ],
-              ),
-              if (notice.summary.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(notice.summary, style: AppTheme.bodySmall,
-                    maxLines: 3, overflow: TextOverflow.ellipsis),
-              ],
-              if (notice.keyPoints.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: notice.keyPoints.map((kp) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warningColor
-                              .withValues(alpha: 0.08),
-                          borderRadius:
-                              BorderRadius.circular(4),
-                        ),
-                        child: Text(kp.content,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.warningColor,
-                            )),
-                      )).toList(),
+                const SizedBox(height: 14),
+                Text(
+                  exam.name,
+                  style: AppTheme.heading1,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                if (exam.fullName != exam.name)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7),
+                    child: Text(exam.fullName, style: AppTheme.bodySmall),
+                  ),
+                if (exam.targetDate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      '我的目标日 ${shortDate(exam.targetDate!)}',
+                      style: AppTheme.body,
+                    ),
+                  ),
               ],
+            ),
+          ),
+          TabBar(
+            controller: _tabs,
+            labelColor: AppTheme.primaryColor,
+            unselectedLabelColor: AppTheme.textSecondary,
+            indicatorColor: AppTheme.primaryColor,
+            tabs: const [
+              Tab(text: '概览'),
+              Tab(text: '考试安排'),
+              Tab(text: '刷题准备'),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  // ==================== Tab: 数据 ====================
-
-  Widget _buildDataTab(Exam exam) {
-    return ListView(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      children: [
-        _buildSectionTitle('📊 考试概览'),
-        const SizedBox(height: 12),
-
-        // 指标卡片行
-        Row(
-          children: [
-            Expanded(
-                child: _buildMetricCard(
-                    '含金量', '${exam.goldContent}', '⭐', AppTheme.accentColor)),
-            const SizedBox(width: 12),
-            Expanded(
-                child: _buildMetricCard(
-                    '难度', '${exam.difficulty}/5', '📊', AppTheme.textPrimary)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-                child: _buildMetricCard('科目数',
-                    '${exam.subjects.length}个', '📝', AppTheme.primaryColor)),
-            const SizedBox(width: 12),
-            Expanded(
-                child: _buildMetricCard('考试形式',
-                    exam.examFormat, '💻', AppTheme.successColor)),
-          ],
-        ),
-
-        const SizedBox(height: AppTheme.spacingLg),
-        _buildSectionTitle('🏷️ 分类信息'),
-        const SizedBox(height: 8),
-        _buildInfoRow('类型', exam.category),
-        _buildInfoRow('行业', exam.industry),
-        _buildInfoRow('适用人群', exam.targetGroups.join(' / ')),
-        if (exam.tags.isNotEmpty)
-          _buildInfoRow('标签', exam.tags.join(' · ')),
-
-        const SizedBox(height: 80),
-      ],
-    );
-  }
-
-  // ==================== 底部操作栏 ====================
-
-  Widget _buildBottomBar(Exam exam) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacingMd,
-          vertical: AppTheme.spacingSm + 4),
-      decoration: BoxDecoration(
-        color: AppTheme.cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+          Expanded(
+            child: TabBarView(
+              controller: _tabs,
+              children: [_overview(exam), _schedule(exam), _practice(exam)],
+            ),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _toggleBookmark,
-                icon: Icon(
-                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  size: 20,
-                ),
-                label: Text(_isBookmarked ? '已收藏' : '收藏'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.textPrimary,
-                  side: const BorderSide(color: AppTheme.dividerColor),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                onPressed: _toggleFollow,
-                icon: Icon(
-                  _isFollowing
-                      ? Icons.notifications_active
-                      : Icons.notifications_outlined,
-                  size: 20,
-                ),
-                label: Text(_isFollowing ? '已关注' : '关注考试'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isFollowing
-                      ? AppTheme.successColor
-                      : AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _busy ? null : _follow,
+                  icon: Icon(
+                    _following ? Icons.check_rounded : Icons.add_rounded,
+                    size: 18,
                   ),
+                  label: Text(_following ? '已关注' : '关注考试'),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () =>
+                      ExternalActions.practice(context, exam: exam),
+                  icon: const Icon(Icons.edit_note_rounded, size: 20),
+                  label: const Text('开始刷题'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ==================== 辅助方法 ====================
-
-  Widget _buildStars(double rating) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        if (index < rating.floor()) {
-          return const Icon(Icons.star,
-              size: 16, color: AppTheme.accentColor);
-        }
-        return const Icon(Icons.star_border,
-            size: 16, color: AppTheme.textLight);
-      }),
-    );
-  }
-
-  Widget _buildInfoTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w500, color: color)),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(title, style: AppTheme.heading3);
-  }
-
-  Widget _buildTimelineRow(ExamTimeline tl) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Text(tl.eventIcon, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 12),
+  Widget _overview(Exam exam) => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      _section('了解这门考试', Text(exam.description, style: AppTheme.body)),
+      _section('报考条件', Text(exam.eligibility, style: AppTheme.body)),
+      if (exam.organizingBody.isNotEmpty)
+        _section('组织机构', Text(exam.organizingBody, style: AppTheme.body)),
+      if (exam.officialWebsite.isNotEmpty)
+        _section(
+          '信息来源',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tl.eventTypeLabel, style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w500,
-                color: AppTheme.textPrimary,
-              )),
-              Text(tl.periodDesc, style: AppTheme.caption),
+              SelectableText(exam.officialWebsite, style: AppTheme.bodySmall),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    ExternalActions.open(context, exam.officialWebsite),
+                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                label: const Text('查看来源网址'),
+              ),
             ],
           ),
-        ],
+        ),
+      _section(
+        '考试科目',
+        exam.subjects.isEmpty
+            ? const Text(
+                '科目资料待补充，可先在掌心刷题选择或导入自己的题库。',
+                style: AppTheme.bodySmall,
+              )
+            : Column(
+                children: exam.subjects
+                    .map(
+                      (subject) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 3),
+                              child: Icon(
+                                Icons.description_outlined,
+                                size: 18,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(subject.name, style: AppTheme.body),
+                            ),
+                            Text(
+                              '${subject.duration} 分钟',
+                              style: AppTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
       ),
-    );
-  }
-
-  Widget _buildMetricCard(
-      String label, String value, String icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 8),
-          Text(value, style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
-          )),
-          const SizedBox(height: 4),
-          Text(label, style: AppTheme.caption),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: AppTheme.bodySmall),
+      if (_notices.isNotEmpty)
+        _section(
+          '相关公告',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _notices
+                .map(
+                  (notice) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(notice.title, style: AppTheme.heading3),
+                        Text(
+                          shortDate(notice.publishDate),
+                          style: AppTheme.caption,
+                        ),
+                        if (notice.summary.isNotEmpty)
+                          Text(notice.summary, style: AppTheme.body),
+                        if (notice.sourceUrl.isNotEmpty)
+                          TextButton(
+                            onPressed: () =>
+                                ExternalActions.open(context, notice.sourceUrl),
+                            child: const Text('查看公告原文'),
+                          ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
           ),
-          Expanded(child: Text(value, style: AppTheme.body)),
+        ),
+      const Text('报考条件与安排可能调整，请核对当年、当地官方公告。', style: AppTheme.bodySmall),
+    ],
+  );
+  Widget _schedule(Exam exam) {
+    final selected = _sessions
+        .where((s) => s.id == _selectedSession)
+        .firstOrNull;
+    final events = _timelines
+        .where((e) => e.sessionId == _selectedSession)
+        .toList();
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        if (exam.targetDate != null)
+          _section(
+            '我的目标日期',
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(shortDate(exam.targetDate!), style: AppTheme.heading2),
+                const Text('这是你填写的备考目标，不作为官方考试日期。', style: AppTheme.bodySmall),
+              ],
+            ),
+          ),
+        if (_sessions.isEmpty)
+          EmptyPanel(
+            title: '安排尚待补充',
+            message: '关注考试后，可以先收集官方资料，并在掌心刷题开始准备。',
+            action: '查看刷题入口',
+            onTap: () => _tabs.animateTo(2),
+            icon: Icons.event_note_outlined,
+          )
+        else ...[
+          DropdownButtonFormField<int>(
+            initialValue: _selectedSession,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: '年份 / 地区 / 批次'),
+            items: _sessions
+                .map(
+                  (s) => DropdownMenuItem(
+                    value: s.id,
+                    child: Text(
+                      s.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (id) => setState(() => _selectedSession = id),
+          ),
+          const SizedBox(height: 20),
+          if (selected != null) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: StatePill(
+                selected.statusLabel,
+                verified: selected.status == 'confirmed',
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(selected.statusDescription, style: AppTheme.bodySmall),
+            if (selected.sourceUrl != null)
+              TextButton(
+                onPressed: () =>
+                    ExternalActions.open(context, selected.sourceUrl!),
+                child: const Text('查看安排来源'),
+              ),
+            if (selected.publishedAt != null)
+              Text(
+                '公告日期 ${shortDate(selected.publishedAt!)}',
+                style: AppTheme.caption,
+              ),
+            if (selected.verifiedAt != null)
+              Text(
+                '核验日期 ${shortDate(selected.verifiedAt!)}',
+                style: AppTheme.caption,
+              ),
+          ],
+          const SizedBox(height: 24),
+          ...events.map(
+            (event) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: AppTheme.dividerColor),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.event_outlined,
+                    color: AppTheme.primaryColor,
+                    size: 21,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(event.eventTypeLabel, style: AppTheme.heading3),
+                        const SizedBox(height: 5),
+                        Text(event.periodDesc, style: AppTheme.body),
+                        if (event.status == 'confirmed' && event.date != null)
+                          Text(
+                            shortDate(event.date!),
+                            style: AppTheme.heading3,
+                          ),
+                        Text(
+                          ExamSession.statuses[event.status] ?? '待核验',
+                          style: AppTheme.caption,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (events.isEmpty)
+            const Text('这个批次尚无具体日期。', style: AppTheme.bodySmall),
         ],
-      ),
+      ],
     );
   }
 
-  Future<void> _toggleFollow() async {
-    if (_exam == null) return;
-    if (_isFollowing) {
-      await _db.unfollowExam(_exam!.id);
-      setState(() => _isFollowing = false);
-    } else {
-      await _db.followExam(_exam!.id);
-      setState(() => _isFollowing = true);
-    }
-  }
-
-  Future<void> _toggleBookmark() async {
-    if (_exam == null) return;
-    if (_isBookmarked) {
-      await _db.unbookmarkExam(_exam!.id);
-      setState(() => _isBookmarked = false);
-    } else {
-      await _db.bookmarkExam(_exam!.id);
-      setState(() => _isBookmarked = true);
-    }
-  }
+  Widget _practice(Exam exam) => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      const Icon(
+        Icons.menu_book_rounded,
+        color: AppTheme.primaryColor,
+        size: 36,
+      ),
+      const SizedBox(height: 16),
+      const Text('从考试资料，走到练习。', style: AppTheme.heading2),
+      const SizedBox(height: 12),
+      Text(
+        '打开掌心刷题，选择“${exam.name}”对应的题库。没有合适的题库时，可以导入自己的题目或资料。',
+        style: AppTheme.body,
+      ),
+      const SizedBox(height: 24),
+      FilledButton.icon(
+        onPressed: () => ExternalActions.practice(context, exam: exam),
+        icon: const Icon(Icons.open_in_new_rounded, size: 18),
+        label: const Text('复制考试名称并打开掌心刷题'),
+      ),
+      const SizedBox(height: 14),
+      const Text(
+        '本次会复制考试名称。掌心刷题需使用自己的账号登录，并由你选择题库。',
+        style: AppTheme.bodySmall,
+      ),
+      const SizedBox(height: 24),
+      OutlinedButton(
+        onPressed: () => ExternalActions.open(
+          context,
+          'https://wiseliang.cloud/palm-quiz/release/',
+        ),
+        child: const Text('下载掌心刷题 App'),
+      ),
+    ],
+  );
 }
