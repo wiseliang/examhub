@@ -26,6 +26,16 @@ class ExternalActions {
     }
   }
 
+  static Future<bool> openQuiz() async {
+    try {
+      return await channel.invokeMethod<bool>('openPalmQuiz') ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
   static Future<void> open(BuildContext context, String url) async {
     final opened = await openUrl(url);
     if (!opened && context.mounted) {
@@ -60,6 +70,11 @@ class ExternalActions {
         context,
       ).showSnackBar(const SnackBar(content: Text('已复制考试名称，请在掌心刷题选择或导入对应题库。')));
     }
-    if (context.mounted) await open(context, quizUrl);
+    if (context.mounted) {
+      final opened = await openQuiz();
+      if (!opened && context.mounted) {
+        await open(context, quizUrl);
+      }
+    }
   }
 }

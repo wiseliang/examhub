@@ -12,18 +12,28 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cloud.wiseliang.examhub/external")
             .setMethodCallHandler { call, result ->
-                if (call.method != "openExternal") {
-                    result.notImplemented()
-                    return@setMethodCallHandler
-                }
-                val url = call.argument<String>("url")
-                val uri = url?.let { Uri.parse(it) }
-                if (uri == null || uri.scheme !in listOf("https", "http") || uri.host.isNullOrBlank() || uri.userInfo != null) {
-                    result.error("INVALID_URL", "Invalid website URL", null)
-                    return@setMethodCallHandler
+                val intent: Intent
+                when (call.method) {
+                    "openPalmQuiz" -> {
+                        intent = packageManager.getLaunchIntentForPackage("cloud.wiseliang.palmquiz")
+                            ?: Intent(Intent.ACTION_VIEW, Uri.parse("https://wiseliang.cloud/palm-quiz/"))
+                                .addCategory(Intent.CATEGORY_BROWSABLE)
+                    }
+                    "openExternal" -> {
+                        val uri = call.argument<String>("url")?.let { Uri.parse(it) }
+                        if (uri == null || uri.scheme !in listOf("https", "http") || uri.host.isNullOrBlank() || uri.userInfo != null) {
+                            result.error("INVALID_URL", "Invalid website URL", null)
+                            return@setMethodCallHandler
+                        }
+                        intent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
+                    }
+                    else -> {
+                        result.notImplemented()
+                        return@setMethodCallHandler
+                    }
                 }
                 try {
-                    startActivity(Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE))
+                    startActivity(intent)
                     result.success(true)
                 } catch (_: ActivityNotFoundException) {
                     result.success(false)
