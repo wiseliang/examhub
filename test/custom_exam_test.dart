@@ -93,15 +93,35 @@ void main() {
   });
   test('个人档案可编辑与删除，公共档案受到保护', () async {
     final id = await helper.addCustomExam(name: '可编辑的个人考试');
-    await helper.bookmarkExam(id); await helper.recordBrowse(id);
-    await helper.updateCustomExam(id: id, name: '修改后的考试', industry: '技能', officialWebsite: 'https://example.com/', targetDate: DateTime(2031, 2, 3));
+    await helper.bookmarkExam(id);
+    await helper.recordBrowse(id);
+    await helper.updateCustomExam(
+      id: id,
+      name: '修改后的考试',
+      industry: '技能',
+      officialWebsite: 'https://example.com/',
+      targetDate: DateTime(2031, 2, 3),
+    );
     expect((await helper.getExamById(id))!.name, '修改后的考试');
     expect(await helper.isFollowing(id), isTrue);
-    await expectLater(helper.updateCustomExam(id: 1, name: '改公共考试', industry: '', officialWebsite: ''), throwsStateError);
+    await expectLater(
+      helper.updateCustomExam(
+        id: 1,
+        name: '改公共考试',
+        industry: '',
+        officialWebsite: '',
+      ),
+      throwsStateError,
+    );
     await expectLater(helper.deleteCustomExam(1), throwsStateError);
     await helper.deleteCustomExam(id);
-    expect(await helper.getExamById(id), isNull); expect(await helper.isFollowing(id), isFalse); expect(await helper.isBookmarked(id), isFalse);
-    expect(await (await helper.database).rawQuery('PRAGMA foreign_key_check'), isEmpty);
+    expect(await helper.getExamById(id), isNull);
+    expect(await helper.isFollowing(id), isFalse);
+    expect(await helper.isBookmarked(id), isFalse);
+    expect(
+      await (await helper.database).rawQuery('PRAGMA foreign_key_check'),
+      isEmpty,
+    );
   });
   test('外部入口只接受网页 URL，不将本地考试 ID 冒充题库 ID', () async {
     final calls = <MethodCall>[];

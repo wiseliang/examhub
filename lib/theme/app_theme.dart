@@ -21,41 +21,41 @@ class AppTheme {
       radiusMd = 14.0,
       radiusLg = 20.0,
       radiusXl = 28.0;
-  static const heading1 = TextStyle(
+  static const heading1 = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 30,
     fontWeight: FontWeight.w800,
     color: textPrimary,
     height: 1.25,
   );
-  static const heading2 = TextStyle(
+  static const heading2 = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 22,
     fontWeight: FontWeight.w700,
     color: textPrimary,
     height: 1.35,
   );
-  static const heading3 = TextStyle(
+  static const heading3 = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 17,
     fontWeight: FontWeight.w700,
     color: textPrimary,
     height: 1.4,
   );
-  static const bodyLarge = TextStyle(
+  static const bodyLarge = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 17,
     color: textPrimary,
     height: 1.6,
   );
-  static const body = TextStyle(fontSize: 15, color: textPrimary, height: 1.6);
-  static const bodySmall = TextStyle(
+  static const body = TextStyle(fontFamily: 'Noto Sans CJK SC', fontSize: 15, color: textPrimary, height: 1.6);
+  static const bodySmall = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 13,
     color: textSecondary,
     height: 1.55,
   );
-  static const caption = TextStyle(
+  static const caption = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 12,
     color: textSecondary,
     height: 1.5,
   );
-  static const tagStyle = TextStyle(
+  static const tagStyle = TextStyle(fontFamily: 'Noto Sans CJK SC', 
     fontSize: 12,
     fontWeight: FontWeight.w600,
     color: primaryColor,
@@ -94,7 +94,7 @@ class AppTheme {
       backgroundColor: Colors.white,
       indicatorColor: primaryLight,
       labelTextStyle: WidgetStateProperty.resolveWith(
-        (states) => TextStyle(
+        (states) => TextStyle(fontFamily: 'Noto Sans CJK SC', 
           fontSize: 12,
           fontWeight: states.contains(WidgetState.selected)
               ? FontWeight.w700
@@ -141,6 +141,9 @@ class AppTheme {
       ),
       hintStyle: bodySmall,
     ),
+    iconTheme: const IconThemeData(color: textSecondary),
+    chipTheme: ChipThemeData(backgroundColor: Colors.white, selectedColor: primaryLight, secondarySelectedColor: primaryLight, showCheckmark: false, side: const BorderSide(color: dividerColor), labelStyle: bodySmall, secondaryLabelStyle: bodySmall.copyWith(color: primaryColor, fontWeight: FontWeight.w700), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+    tabBarTheme: const TabBarThemeData(dividerColor: dividerColor),
     dividerTheme: const DividerThemeData(
       color: dividerColor,
       thickness: 1,

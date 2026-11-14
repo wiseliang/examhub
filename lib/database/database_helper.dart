@@ -227,25 +227,69 @@ class DatabaseHelper {
     });
   }
 
-  Future<void> updateCustomExam({required int id, required String name, required String industry, required String officialWebsite, DateTime? targetDate}) async {
+  Future<void> updateCustomExam({
+    required int id,
+    required String name,
+    required String industry,
+    required String officialWebsite,
+    DateTime? targetDate,
+  }) async {
     final title = name.trim().replaceAll(RegExp(r'\s+'), ' ');
-    if (title.isEmpty || title.length > 100) throw ArgumentError('请填写 1 至 100 字的考试名称');
+    if (title.isEmpty || title.length > 100) {
+      throw ArgumentError('请填写 1 至 100 字的考试名称');
+    }
     final website = officialWebsite.trim();
     final uri = Uri.tryParse(website);
-    if (website.isNotEmpty && (uri == null || !['http', 'https'].contains(uri.scheme) || uri.host.isEmpty)) throw ArgumentError('请填写完整的官网网址');
+    if (website.isNotEmpty &&
+        (uri == null ||
+            !['http', 'https'].contains(uri.scheme) ||
+            uri.host.isEmpty)) {
+      throw ArgumentError('请填写完整的官网网址');
+    }
     final db = await database;
     await db.transaction((txn) async {
-      final rows = await txn.query('exam', where: 'id = ? AND origin = ?', whereArgs: [id, 'custom']);
+      final rows = await txn.query(
+        'exam',
+        where: 'id = ? AND origin = ?',
+        whereArgs: [id, 'custom'],
+      );
       if (rows.isEmpty) throw StateError('只能编辑自己添加的考试');
-      final others = await txn.query('exam', columns: ['id','name','full_name'], where: 'id != ?', whereArgs: [id]);
-      if (others.any((row) => ['name','full_name'].any((key) => (row[key] as String).trim().toLowerCase() == title.toLowerCase()))) throw ArgumentError('已有同名考试，请使用不同的名称');
-      await txn.update('exam', {'name': title, 'full_name': title, 'industry': industry.trim().isEmpty ? '其他考试' : industry.trim(), 'official_website': website, 'target_date': targetDate?.toIso8601String()}, where: 'id = ?', whereArgs: [id]);
+      final others = await txn.query(
+        'exam',
+        columns: ['id', 'name', 'full_name'],
+        where: 'id != ?',
+        whereArgs: [id],
+      );
+      if (others.any(
+        (row) => ['name', 'full_name'].any(
+          (key) =>
+              (row[key] as String).trim().toLowerCase() == title.toLowerCase(),
+        ),
+      )) {
+        throw ArgumentError('已有同名考试，请使用不同的名称');
+      }
+      await txn.update(
+        'exam',
+        {
+          'name': title,
+          'full_name': title,
+          'industry': industry.trim().isEmpty ? '其他考试' : industry.trim(),
+          'official_website': website,
+          'target_date': targetDate?.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     });
   }
 
   Future<void> deleteCustomExam(int id) async {
     final db = await database;
-    final count = await db.delete('exam', where: 'id = ? AND origin = ?', whereArgs: [id, 'custom']);
+    final count = await db.delete(
+      'exam',
+      where: 'id = ? AND origin = ?',
+      whereArgs: [id, 'custom'],
+    );
     if (count == 0) throw StateError('只能删除自己添加的考试');
   }
 

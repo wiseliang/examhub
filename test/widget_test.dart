@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:examhub/app.dart';
+import 'package:examhub/widgets/ui_kit.dart';
 import 'package:examhub/database/database_helper.dart';
 import 'package:examhub/models/exam_session.dart';
 import 'package:examhub/models/exam_timeline.dart';
@@ -170,7 +171,7 @@ void main() {
     final selector = find.byType(DropdownButtonFormField<int>);
     await tester.ensureVisible(selector);
     await tester.pumpAndSettle();
-    expect(find.text('往年规律参考'), findsOneWidget);
+    expect(find.widgetWithText(StatePill, '往年规律参考'), findsOneWidget);
     await tester.tap(selector);
     await tester.pumpAndSettle();
     expect(find.textContaining('年份待公布'), findsWidgets);

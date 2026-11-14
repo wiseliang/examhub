@@ -112,14 +112,40 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
     final exam = _exam;
     if (exam == null || !exam.isCustom) return;
     if (action == 'edit') {
-      await Navigator.push<int>(context, MaterialPageRoute(builder: (_) => CustomExamScreen(existing: exam)));
+      await Navigator.push<int>(
+        context,
+        MaterialPageRoute(builder: (_) => CustomExamScreen(existing: exam)),
+      );
       if (mounted) await _load();
       return;
     }
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(title: const Text('删除这门个人考试？'), content: const Text('会同时移除本机的关注、收藏和浏览记录。'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('保留')), TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('删除'))]));
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除这门个人考试？'),
+        content: const Text('会同时移除本机的关注、收藏和浏览记录。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('保留'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
     if (confirmed != true) return;
-    try {await _db.deleteCustomExam(exam.id); if (mounted) Navigator.pop(context);}
-    catch (_) {if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('删除未完成，请重试。')));}
+    try {
+      await _db.deleteCustomExam(exam.id);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('删除未完成，请重试。')));
+      }
+    }
   }
 
   Widget _section(String title, Widget child) => Padding(
@@ -159,7 +185,15 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
       appBar: AppBar(
         title: const Text('考试档案'),
         actions: [
-          if (exam.isCustom) PopupMenuButton<String>(tooltip: '管理个人考试', onSelected: _manage, itemBuilder: (_) => const [PopupMenuItem(value: 'edit', child: Text('编辑个人考试')), PopupMenuItem(value: 'delete', child: Text('删除个人考试'))]),
+          if (exam.isCustom)
+            PopupMenuButton<String>(
+              tooltip: '管理个人考试',
+              onSelected: _manage,
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('编辑个人考试')),
+                PopupMenuItem(value: 'delete', child: Text('删除个人考试')),
+              ],
+            ),
           IconButton(
             tooltip: _bookmarked ? '取消收藏' : '收藏考试',
             onPressed: _bookmark,
@@ -189,7 +223,12 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
                   ],
                 ),
                 const SizedBox(height: 14),
-                Text(exam.name, style: AppTheme.heading1, maxLines: 3, overflow: TextOverflow.ellipsis),
+                Text(
+                  exam.name,
+                  style: AppTheme.heading1,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 if (exam.fullName != exam.name)
                   Padding(
                     padding: const EdgeInsets.only(top: 7),

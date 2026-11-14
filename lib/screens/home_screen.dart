@@ -44,7 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _exams = exams;
           _followed = followed;
-          _events = events.where((event) => followed.any((exam) => exam.id == event['exam_id'])).toList();
+          _events = events
+              .where(
+                (event) => followed.any((exam) => exam.id == event['exam_id']),
+              )
+              .toList();
           _loading = false;
           _error = null;
         });
@@ -257,12 +261,27 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             if (_events.isNotEmpty) ...[
               const SectionHeading('近期安排'),
-              ..._events.take(3).map((event) => ListTile(
-                leading: const Icon(Icons.event_outlined, color: AppTheme.primaryColor),
-                title: Text(event['exam_name'] as String),
-                subtitle: Text('${event['region']} · ${shortDate(DateTime.parse(event['date'] as String))}'),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ExamDetailScreen(examId: event['exam_id'] as int))),
-              )),
+              ..._events
+                  .take(3)
+                  .map(
+                    (event) => ListTile(
+                      leading: const Icon(
+                        Icons.event_outlined,
+                        color: AppTheme.primaryColor,
+                      ),
+                      title: Text(event['exam_name'] as String),
+                      subtitle: Text(
+                        '${event['region']} · ${shortDate(DateTime.parse(event['date'] as String))}',
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ExamDetailScreen(examId: event['exam_id'] as int),
+                        ),
+                      ),
+                    ),
+                  ),
             ],
             SectionHeading('考试目录', action: '查看全部', onTap: _browse),
             if (_loading)

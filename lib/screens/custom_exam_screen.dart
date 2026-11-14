@@ -40,7 +40,9 @@ class _CustomExamScreenState extends State<CustomExamScreen> {
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: widget.existing?.name ?? widget.initialName);
+    _name = TextEditingController(
+      text: widget.existing?.name ?? widget.initialName,
+    );
     _industry.text = widget.existing?.industry ?? '';
     _website.text = widget.existing?.officialWebsite ?? '';
     _target = widget.existing?.targetDate;
@@ -63,17 +65,30 @@ class _CustomExamScreenState extends State<CustomExamScreen> {
     try {
       final int id;
       if (widget.existing == null) {
-        id = await DatabaseHelper().addCustomExam(name: _name.text, industry: _industry.text, officialWebsite: _website.text, targetDate: _target);
+        id = await DatabaseHelper().addCustomExam(
+          name: _name.text,
+          industry: _industry.text,
+          officialWebsite: _website.text,
+          targetDate: _target,
+        );
       } else {
         id = widget.existing!.id;
-        await DatabaseHelper().updateCustomExam(id: id, name: _name.text, industry: _industry.text, officialWebsite: _website.text, targetDate: _target);
+        await DatabaseHelper().updateCustomExam(
+          id: id,
+          name: _name.text,
+          industry: _industry.text,
+          officialWebsite: _website.text,
+          targetDate: _target,
+        );
       }
       if (mounted) Navigator.pop(context, id);
     } catch (error) {
       if (mounted) {
         setState(() {
           _saving = false;
-          _error = error is ArgumentError ? error.message.toString() : '保存未完成，请检查填写内容后重试。';
+          _error = error is ArgumentError
+              ? error.message.toString()
+              : '保存未完成，请检查填写内容后重试。';
         });
       }
     }
@@ -171,7 +186,13 @@ class _CustomExamScreenState extends State<CustomExamScreen> {
             const SizedBox(height: 28),
             FilledButton(
               onPressed: _saving ? null : _save,
-              child: Text(_saving ? '正在保存…' : widget.existing == null ? '添加并关注' : '保存修改'),
+              child: Text(
+                _saving
+                    ? '正在保存…'
+                    : widget.existing == null
+                    ? '添加并关注'
+                    : '保存修改',
+              ),
             ),
             const SizedBox(height: 24),
           ],

@@ -210,8 +210,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               padding: const EdgeInsets.fromLTRB(20, 6, 12, 6),
               child: Row(
                 children: [
-                  Text('找到 ${results.length} 门考试', style: AppTheme.bodySmall),
-                  const Spacer(),
+                  Expanded(child: Text('找到 ${results.length} 门考试', style: AppTheme.bodySmall, maxLines: 2, overflow: TextOverflow.ellipsis)),
                   TextButton.icon(
                     onPressed: _filters,
                     icon: const Icon(Icons.tune_rounded, size: 16),
