@@ -140,6 +140,9 @@ void main() {
     expect(calls.single.arguments, {
       'url': 'https://wiseliang.cloud/palm-quiz/',
     });
+    expect(await ExternalActions.openQuiz(), isTrue);
+    expect(calls.last.method, 'openPalmQuiz');
+    expect(calls.last.arguments, isNull);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(ExternalActions.channel, null);
   });
