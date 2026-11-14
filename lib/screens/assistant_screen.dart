@@ -168,7 +168,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
   void _report(String message) {
     if (!mounted) return;
     setState(() => _error = message);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _start() async {

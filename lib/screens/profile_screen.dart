@@ -209,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: () => showAboutDialog(
                           context: context,
                           applicationName: '考试通',
-                          applicationVersion: '1.2.0',
+                          applicationVersion: '1.3.0',
                           children: const [
                             Text('考试目录与个人备考工具。公共资料仍需核验，个人添加的内容仅保存在本机。'),
                           ],
