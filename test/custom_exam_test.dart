@@ -40,7 +40,7 @@ void main() {
 
   test('v2 升级 v3 保留公开目录和关注偏好', () async {
     final db = await helper.database;
-    expect(await db.getVersion(), 3);
+    expect(await db.getVersion(), 4);
     expect(await helper.getAllExams(), hasLength(40));
     expect((await helper.getExamById(1))!.isCustom, isFalse);
     final follow = await db.query('local_follow', where: 'exam_id = 1');

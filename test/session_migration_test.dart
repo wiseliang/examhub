@@ -42,7 +42,7 @@ void main() {
 
   test('v1 升级保留考试、原始节点及全部个人数据，不猜测年份', () async {
     final db = await helper.database;
-    expect(await db.getVersion(), 3);
+    expect(await db.getVersion(), 4);
     expect(await helper.getAllExams(), hasLength(40));
     expect(await helper.isFollowing(1), isTrue);
     expect(await helper.isBookmarked(1), isTrue);

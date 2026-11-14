@@ -41,20 +41,26 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await _onCreate(db, 1);
         await migrateSessions(db);
         await migrateCustomExams(db);
+        await _createAssistantState(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) await migrateSessions(db);
         if (oldVersion < 3) await migrateCustomExams(db);
+        if (oldVersion < 4) await _createAssistantState(db);
       },
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
     );
+  }
+
+  Future<void> _createAssistantState(Database db) async {
+    await db.execute('CREATE TABLE IF NOT EXISTS assistant_state (id TEXT PRIMARY KEY, body TEXT NOT NULL)');
   }
 
   Future<void> _onCreate(Database db, int version) async {

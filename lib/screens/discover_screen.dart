@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/ui_kit.dart';
 import 'custom_exam_screen.dart';
 import 'exam_detail_screen.dart';
+import 'assistant_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -251,15 +252,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           else if (results.isEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 24),
-                              child: EmptyPanel(
-                                title: _search.text.isEmpty
-                                    ? '这个范围还没有考试'
-                                    : '没有找到“${_search.text.trim()}”',
-                                message: '可以调整筛选，也可以自己添加，先开始准备。',
-                                action: '添加这个考试',
-                                onTap: _add,
-                                icon: Icons.search_off_rounded,
-                              ),
+                              child: Column(children: [
+                                EmptyPanel(
+                                  title: _search.text.isEmpty ? '这个范围还没有考试' : '没有找到“${_search.text.trim()}”',
+                                  message: '可以调整筛选，也可以让助手联网查找。',
+                                  action: '添加这个考试', onTap: _add, icon: Icons.search_off_rounded,
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AssistantScreen(initialExam: _search.text.trim()))),
+                                  icon: const Icon(Icons.travel_explore), label: const Text('让助手联网查这个考试'),
+                                ),
+                              ]),
                             )
                           else
                             ...results.map(
