@@ -33,7 +33,10 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   List<Widget> get _screens => [
-    HomeScreen(active: _currentIndex == 0, onBrowse: () => setState(() => _currentIndex = 1)),
+    HomeScreen(
+      active: _currentIndex == 0,
+      onBrowse: () => setState(() => _currentIndex = 1),
+    ),
     const DiscoverScreen(),
     ProfileScreen(active: _currentIndex == 2),
   ];
@@ -46,9 +49,21 @@ class _MainShellState extends State<MainShell> {
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard_rounded), label: '备考'),
-          NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book_rounded), label: '考试库'),
-          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: '我的'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded),
+            label: '备考',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book_rounded),
+            label: '考试库',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: '我的',
+          ),
         ],
       ),
     );
