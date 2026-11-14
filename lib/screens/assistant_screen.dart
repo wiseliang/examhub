@@ -31,6 +31,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   String _message = '';
   bool _busy = false, _polling = false, _ready = false;
   int _week = 0;
+  int _section = 0;
   Set<int> _studyDays = {1, 2, 3, 4, 5, 6, 7};
   Timer? _timer;
   String get _key =>
@@ -463,12 +464,25 @@ class _AssistantScreenState extends State<AssistantScreen> {
       children: [
         Text(_document!['goal']['exam'] as String, style: AppTheme.heading3),
         const SizedBox(height: 8),
-        Text(result['summary'] as String),
+        Text(result['summary'] as String, maxLines: _section == 1 ? null : 3, overflow: _section == 1 ? null : TextOverflow.ellipsis),
         const SizedBox(height: 10),
         Text(
-          '检索于 ${result['searchedAt']}，共 ${result['searches']} 次检索。来源类型和题库适配由 AI 整理，使用前请核对原文。',
+          '检索于 ${DateTime.tryParse(result['searchedAt'] as String)?.toLocal().toString().substring(0, 16) ?? result['searchedAt']}，共 ${result['searches']} 次检索。AI 整理结果，请核对原文。',
           style: AppTheme.bodySmall,
         ),
+        const SizedBox(height: 16),
+        Wrap(spacing: 8, children: [
+          for (var section = 0; section < 3; section++) ChoiceChip(
+            label: Text(['复习计划', '考试依据', '题库候选'][section]),
+            selected: _section == section,
+            onSelected: (_) => setState(() => _section = section),
+          ),
+        ]),
+        if (_section != 1 && (result['uncertainties'] as List).isNotEmpty) Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text('待确认：${(result['uncertainties'] as List).first}', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.warningColor)),
+        ),
+        if (_section == 1) ...[
         for (final item in result['uncertainties'] as List)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -501,6 +515,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
             ],
           ),
         const SizedBox(height: 22),
+        ],
+        if (_section == 2) ...[
         const Text('适合的题库候选', style: AppTheme.heading3),
         if ((result['banks'] as List).isEmpty)
           const Padding(
@@ -559,15 +575,18 @@ class _AssistantScreenState extends State<AssistantScreen> {
             ],
           ),
         const SizedBox(height: 22),
+        ],
+        if (_section == 0) ...[
         const Text('每日复习任务', style: AppTheme.heading3),
         const SizedBox(height: 8),
         Text(
           '${plan['days']} 个学习日，每天 ${_document!['goal']['minutes']} 分钟；已完成 $completed / ${tasks.length} 项',
         ),
         const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: tasks.isEmpty ? 0 : completed / tasks.length,
-        ),
+        Semantics(label: '已完成 $completed 项，共 ${tasks.length} 项', child: SizedBox(height: 4, child: Stack(children: [
+          Container(color: AppTheme.dividerColor),
+          FractionallySizedBox(widthFactor: tasks.isEmpty ? 0 : completed / tasks.length, child: Container(color: AppTheme.primaryColor)),
+        ]))),
         const SizedBox(height: 12),
         Text(plan['notice'] as String, style: AppTheme.bodySmall),
         Align(
@@ -609,6 +628,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
             ),
           ],
         ),
+        ],
       ],
     );
   }
@@ -630,6 +650,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
         : ListView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 36),
             children: [
+              if (_result == null) ...[
               const Text(
                 '想考什么，\n我们从这里开始。',
                 style: TextStyle(
@@ -642,6 +663,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
               const SizedBox(height: 12),
               const Text('查官方信息，找合适题库，把复习安排进每一天。', style: AppTheme.bodySmall),
               const SizedBox(height: 24),
+              ],
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -693,7 +715,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-              if (!_busy && _job == null) _goalForm(),
+              if (!_busy && _job == null)
+                if (_result == null) _goalForm() else ExpansionTile(title: const Text('调整目标并重新研究'), children: [_goalForm()]),
             ],
           ),
   );

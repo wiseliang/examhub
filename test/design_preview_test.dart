@@ -106,6 +106,7 @@ void main() {
       RepaintBoundary(
         key: key,
         child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: const AssistantScreen(),
         ),
@@ -125,6 +126,7 @@ void main() {
       RepaintBoundary(
         key: key,
         child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: const AssistantScreen(),
         ),
@@ -133,6 +135,11 @@ void main() {
     await capture(tester, key, '备考助手联网实测结果');
     await tester.ensureVisible(find.text('每日复习任务'));
     await capture(tester, key, '备考助手每日任务');
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '题库候选'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ChoiceChip, '题库候选'));
+    await capture(tester, key, '备考助手题库候选');
+
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

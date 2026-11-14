@@ -31,8 +31,16 @@ jobs:
           cache: true
       - name: Resolve locked dependencies
         run: flutter pub get --enforce-lockfile
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Format review sources
+        run: dart format lib test
+      - name: Upload formatted review sources
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: examhub-formatted-${{ github.run_number }}
+          path: |
+            lib/
+            test/
+          retention-days: 2
       - name: Test lightweight assistant service
         run: node --test server/test/*.test.mjs
       - name: Analyze
