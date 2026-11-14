@@ -60,7 +60,9 @@ class DatabaseHelper {
   }
 
   Future<void> _createAssistantState(Database db) async {
-    await db.execute('CREATE TABLE IF NOT EXISTS assistant_state (id TEXT PRIMARY KEY, body TEXT NOT NULL)');
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS assistant_state (id TEXT PRIMARY KEY, body TEXT NOT NULL)',
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {

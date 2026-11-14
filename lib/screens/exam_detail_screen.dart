@@ -189,7 +189,12 @@ class _ExamDetailScreenState extends State<ExamDetailScreen>
           IconButton(
             tooltip: '让助手规划备考',
             icon: const Icon(Icons.travel_explore),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AssistantScreen(initialExam: exam.fullName))),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AssistantScreen(initialExam: exam.fullName),
+              ),
+            ),
           ),
           if (exam.isCustom)
             PopupMenuButton<String>(
