@@ -160,7 +160,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('检索资料并规划复习'));
     await tester.pumpAndSettle();
-    expect(find.text('测试：服务不可用'), findsOneWidget);
+    expect(api.starts, 1);
+    expect(find.text('测试：服务不可用'), findsWidgets);
     expect(find.text('这是测试固定数据，不是实际检索结论。'), findsNothing);
     expect(
       (await store.read('assistant:freeform'))!['goal']['exam'],

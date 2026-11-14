@@ -102,12 +102,34 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final key = GlobalKey();
-    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(theme: AppTheme.lightTheme, home: const AssistantScreen())));
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const AssistantScreen(),
+        ),
+      ),
+    );
     await capture(tester, key, '备考助手目标');
     await tester.pumpWidget(const SizedBox.shrink());
-    final sample = jsonDecode(File('test/fixtures/assistant_live_research_20261114.json').readAsStringSync()) as Map<String, dynamic>;
-    await AssistantStore().write('assistant:freeform', {'goal': sample['goal'], 'result': sample['result']});
-    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(theme: AppTheme.lightTheme, home: const AssistantScreen())));
+    final sample = jsonDecode(
+      File('test/fixtures/assistant_live_research_20261114.json')
+          .readAsStringSync(),
+    ) as Map<String, dynamic>;
+    await AssistantStore().write('assistant:freeform', {
+      'goal': sample['goal'],
+      'result': sample['result'],
+    });
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const AssistantScreen(),
+        ),
+      ),
+    );
     await capture(tester, key, '备考助手联网实测结果');
     await tester.ensureVisible(find.text('每日复习任务'));
     await capture(tester, key, '备考助手每日任务');

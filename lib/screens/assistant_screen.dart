@@ -72,7 +72,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
         _preferences.text = goal['preferences'] as String;
         _minutes.text = '${goal['minutes']}';
         _date = DateTime.tryParse(goal['targetDate'] as String);
-        _studyDays = ((goal['studyDays'] as List?) ?? [1, 2, 3, 4, 5, 6, 7]).cast<int>().toSet();
+        _studyDays = ((goal['studyDays'] as List?) ?? [1, 2, 3, 4, 5, 6, 7])
+            .cast<int>()
+            .toSet();
       }
       _job = document?['job'] as String?;
       _message = _job == null ? '' : '有未完成的研究，连接服务后可继续查看';
@@ -163,16 +165,23 @@ class _AssistantScreenState extends State<AssistantScreen> {
     }
   }
 
+  void _report(String message) {
+    if (!mounted) return;
+    setState(() => _error = message);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _start() async {
     if (!_form.currentState!.validate()) return;
     final now = DateTime.now();
     if (_date == null ||
         !_date!.isAfter(DateTime(now.year, now.month, now.day))) {
-      setState(() => _error = '请选择未来的个人复习截止日。');
+      _report('请选择未来的个人复习截止日。');
       return;
     }
     if (_studyDays.isEmpty) {
-      setState(() => _error = '请选择每周至少一个学习日。'); return;
+      _report('请选择每周至少一个学习日。');
+      return;
     }
     if (AssistantApi.accessCode.isEmpty && widget.api == null) {
       await _connect();
@@ -208,6 +217,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
           _busy = false;
           _error = _friendly(e);
         });
+        _report(_friendly(e));
       }
     }
   }
@@ -313,10 +323,24 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   Future<void> _reschedule() async {
     final old = _result!['plan'];
-    final updated = rescheduleStudyPlan(old as Map<String, dynamic>, _document!['goal'] as Map<String, dynamic>, DateTime.now());
-    setState(() { _result!['plan'] = updated; _week = 0; });
-    try { await _save(); } catch (_) {
-      if (mounted) { setState(() { _result!['plan'] = old; _error = '重新安排未保存，请重试。'; }); }
+    final updated = rescheduleStudyPlan(
+      old as Map<String, dynamic>,
+      _document!['goal'] as Map<String, dynamic>,
+      DateTime.now(),
+    );
+    setState(() {
+      _result!['plan'] = updated;
+      _week = 0;
+    });
+    try {
+      await _save();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _result!['plan'] = old;
+          _error = '重新安排未保存，请重试。';
+        });
+      }
     }
   }
 
@@ -396,13 +420,25 @@ class _AssistantScreenState extends State<AssistantScreen> {
         ),
         const SizedBox(height: 18),
         const Text('每周哪些天可以学习？'),
-        Wrap(spacing: 6, children: [
-          for (var day = 1; day <= 7; day++) FilterChip(
-            label: Text(['周一', '周二', '周三', '周四', '周五', '周六', '周日'][day - 1]),
-            selected: _studyDays.contains(day),
-            onSelected: (selected) => setState(() { if (selected) { _studyDays.add(day); } else { _studyDays.remove(day); } }),
-          ),
-        ]),
+        Wrap(
+          spacing: 6,
+          children: [
+            for (var day = 1; day <= 7; day++)
+              FilterChip(
+                label: Text(
+                  ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][day - 1],
+                ),
+                selected: _studyDays.contains(day),
+                onSelected: (selected) => setState(() {
+                  if (selected) {
+                    _studyDays.add(day);
+                  } else {
+                    _studyDays.remove(day);
+                  }
+                }),
+              ),
+          ],
+        ),
         const SizedBox(height: 20),
         FilledButton.icon(
           onPressed: _busy || !_ready || _job != null ? null : _start,
@@ -533,7 +569,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
         ),
         const SizedBox(height: 12),
         Text(plan['notice'] as String, style: AppTheme.bodySmall),
-        Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _reschedule, icon: const Icon(Icons.event_repeat), label: const Text('从今天重新安排未完成任务'))),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _reschedule,
+            icon: const Icon(Icons.event_repeat),
+            label: const Text('从今天重新安排未完成任务'),
+          ),
+        ),
         for (final date in shown) ...[
           Padding(
             padding: const EdgeInsets.only(top: 20, bottom: 6),

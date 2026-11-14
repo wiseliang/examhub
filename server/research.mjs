@@ -13,7 +13,7 @@ export function normalizeResearch(raw, searches) {
  if (!searches) throw Error('本次未执行联网检索，未生成结果；请检查服务端搜索权限。');
  if (!raw || typeof raw.summary!=='string' || !Array.isArray(raw.subjects) || !raw.subjects.length || !Array.isArray(raw.sources) || !Array.isArray(raw.banks) || !Array.isArray(raw.uncertainties)) throw Error('研究结果格式不完整，请重试。');
  const clean=(v,n=3000)=>String(v??'').slice(0,n);
- return {summary:clean(raw.summary),uncertainties:raw.uncertainties.slice(0,20).map(x=>clean(x)),subjects:raw.subjects.slice(0,12).map(s=>({name:clean(s.name,100),focus:clean(s.focus)})),sources:raw.sources.filter(s=>safeUrl(s.url)).slice(0,12).map(s=>({title:clean(s.title,200),url:safeUrl(s.url),kind:['official','publisher'].includes(s.kind)?s.kind:'other',finding:clean(s.finding),verification:'AI 检索整理，需打开原文核对'})),banks:raw.banks.filter(s=>safeUrl(s.url)).slice(0,8).map(s=>Object.fromEntries(['name','url','fit','version','cost','limitations','importability'].map(k=>[k,k==='url'?safeUrl(s[k]):clean(s[k])])))};
+ return {summary:clean(raw.summary),uncertainties:raw.uncertainties.slice(0,20).map(x=>clean(x)),subjects:raw.subjects.slice(0,12).map(s=>({name:clean(s.name,100),focus:clean(s.focus,600)})),sources:raw.sources.filter(s=>safeUrl(s.url)).slice(0,12).map(s=>({title:clean(s.title,200),url:safeUrl(s.url),kind:['official','publisher'].includes(s.kind)?s.kind:'other',finding:clean(s.finding),verification:'AI 检索整理，需打开原文核对'})),banks:raw.banks.filter(s=>safeUrl(s.url)).slice(0,8).map(s=>Object.fromEntries(['name','url','fit','version','cost','limitations','importability'].map(k=>[k,k==='url'?safeUrl(s[k]):clean(s[k])])))};
 }
 export async function research(goal,{signal,onProgress=()=>{},timeout=240000,bin=process.env.EXAMHUB_CODEX_BIN??'codex'}={}) {
  const cwd=await mkdtemp(path.join(tmpdir(),'examhub-research-'));
@@ -23,12 +23,16 @@ export async function research(goal,{signal,onProgress=()=>{},timeout=240000,bin
  let output='',last='',searches=0,buffer='',size=0,failed=false;
  const args=['-c','mcp_servers={}','-c','features.shell_tool=false','-c','features.multi_agent=false','-c','web_search="live"','exec','--ephemeral','--sandbox','read-only','--skip-git-repo-check','--json','--output-schema',schemaPath,'-C',cwd,'-'];
  if(process.env.EXAMHUB_MODEL)args.splice(args.indexOf('exec')+1,0,'--model',process.env.EXAMHUB_MODEL);
- const child=spawn(bin,args,{cwd,stdio:['pipe','pipe','pipe'],signal});
- const timer=setTimeout(()=>child.kill('SIGTERM'),timeout);timer.unref();
+ if(signal?.aborted)throw Error('研究已取消。');
+ const child=spawn(bin,args,{cwd,stdio:['pipe','pipe','pipe']});
+ let killing,terminated=false;
+ const stop=()=>{terminated=true;child.kill('SIGTERM');if(!killing){killing=setTimeout(()=>child.kill('SIGKILL'),3000);killing.unref();}};
+ signal?.addEventListener('abort',stop,{once:true});
+ const timer=setTimeout(stop,timeout);timer.unref();
  const consume=line=>{try{const event=JSON.parse(line);if(event.type==='turn.failed'||event.type==='error')failed=true;const item=event.item;if(event.type==='item.completed'&&item?.type==='web_search'){searches++;onProgress(`已完成 ${searches} 次联网检索，正在核对资料`);}if(event.type==='item.completed'&&item?.type==='agent_message')last=item.text;}catch{}};
- child.stdout.on('data',chunk=>{size+=chunk.length;if(size>4*1024*1024){child.kill();return;}buffer+=chunk;const lines=buffer.split('\n');buffer=lines.pop();for(const line of lines)consume(line);});
+ child.stdout.on('data',chunk=>{size+=chunk.length;if(size>4*1024*1024){stop();return;}buffer+=chunk;const lines=buffer.split('\n');buffer=lines.pop();for(const line of lines)consume(line);});
  child.stderr.on('data',()=>{});child.stdin.on('error',()=>{});child.stdin.end(prompt);
- try {await new Promise((resolve,reject)=>{child.once('error',reject);child.once('close',code=>code===0?resolve():reject(Error('联网研究未完成，请检查 Codex 登录、搜索权限或稍后重试。')));});}finally{clearTimeout(timer);}
+ try {await new Promise((resolve,reject)=>{child.once('error',reject);child.once('close',code=>code===0&&!terminated?resolve():reject(Error('联网研究未完成，请检查 Codex 登录、搜索权限或稍后重试。')));});}finally{clearTimeout(timer);clearTimeout(killing);signal?.removeEventListener('abort',stop);}
  if(buffer)consume(buffer);if(failed||!last)throw Error('AI 服务未返回完整研究结果。');
  output=JSON.parse(last);return {...normalizeResearch(output,searches),searchedAt:new Date().toISOString(),searches};
  }finally{await rm(cwd,{recursive:true,force:true});}
