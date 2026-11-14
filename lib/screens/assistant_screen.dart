@@ -464,170 +464,195 @@ class _AssistantScreenState extends State<AssistantScreen> {
       children: [
         Text(_document!['goal']['exam'] as String, style: AppTheme.heading3),
         const SizedBox(height: 8),
-        Text(result['summary'] as String, maxLines: _section == 1 ? null : 3, overflow: _section == 1 ? null : TextOverflow.ellipsis),
+        Text(
+          result['summary'] as String,
+          maxLines: _section == 1 ? null : 3,
+          overflow: _section == 1 ? null : TextOverflow.ellipsis,
+        ),
         const SizedBox(height: 10),
         Text(
           '检索于 ${DateTime.tryParse(result['searchedAt'] as String)?.toLocal().toString().substring(0, 16) ?? result['searchedAt']}，共 ${result['searches']} 次检索。AI 整理结果，请核对原文。',
           style: AppTheme.bodySmall,
         ),
         const SizedBox(height: 16),
-        Wrap(spacing: 8, children: [
-          for (var section = 0; section < 3; section++) ChoiceChip(
-            label: Text(['复习计划', '考试依据', '题库候选'][section]),
-            selected: _section == section,
-            onSelected: (_) => setState(() => _section = section),
-          ),
-        ]),
-        if (_section != 1 && (result['uncertainties'] as List).isNotEmpty) Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Text('待确认：${(result['uncertainties'] as List).first}', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.warningColor)),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (var section = 0; section < 3; section++)
+              ChoiceChip(
+                label: Text(['复习计划', '考试依据', '题库候选'][section]),
+                selected: _section == section,
+                onSelected: (_) => setState(() => _section = section),
+              ),
+          ],
         ),
-        if (_section == 1) ...[
-        for (final item in result['uncertainties'] as List)
+        if (_section != 1 && (result['uncertainties'] as List).isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 12),
             child: Text(
-              '待确认：$item',
+              '待确认：${(result['uncertainties'] as List).first}',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: AppTheme.warningColor),
             ),
           ),
-        const SizedBox(height: 22),
-        const Text('考试依据', style: AppTheme.heading3),
-        if ((result['sources'] as List).isEmpty)
-          const Text('没有找到足够可靠的来源，先确认考试正式名称和主办方。'),
-        for (final source in result['sources'] as List)
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: Text(source['title'] as String),
-            subtitle: Text(
-              source['kind'] == 'official' ? 'AI 判断为官方来源，待核对' : '资料来源，待核对',
+        if (_section == 1) ...[
+          for (final item in result['uncertainties'] as List)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '待确认：$item',
+                style: const TextStyle(color: AppTheme.warningColor),
+              ),
             ),
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(source['finding'] as String),
+          const SizedBox(height: 22),
+          const Text('考试依据', style: AppTheme.heading3),
+          if ((result['sources'] as List).isEmpty)
+            const Text('没有找到足够可靠的来源，先确认考试正式名称和主办方。'),
+          for (final source in result['sources'] as List)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(source['title'] as String),
+              subtitle: Text(
+                source['kind'] == 'official' ? 'AI 判断为官方来源，待核对' : '资料来源，待核对',
               ),
-              TextButton(
-                onPressed: () =>
-                    ExternalActions.open(context, source['url'] as String),
-                child: const Text('打开原文核对'),
-              ),
-            ],
-          ),
-        const SizedBox(height: 22),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(source['finding'] as String),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      ExternalActions.open(context, source['url'] as String),
+                  child: const Text('打开原文核对'),
+                ),
+              ],
+            ),
+          const SizedBox(height: 22),
         ],
         if (_section == 2) ...[
-        const Text('适合的题库候选', style: AppTheme.heading3),
-        if ((result['banks'] as List).isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text('暂未找到足够匹配的题库。可以补充科目、地区或版本后重新检索。'),
-          ),
-        for (final bank in result['banks'] as List)
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: Text(bank['name'] as String),
-            subtitle: Text(bank['fit'] as String),
-            children: [
-              for (final entry in {
-                '版本': 'version',
-                '费用': 'cost',
-                '局限': 'limitations',
-                '导入条件': 'importability',
-              }.entries)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('${entry.key}：${bank[entry.value]}'),
+          const Text('适合的题库候选', style: AppTheme.heading3),
+          if ((result['banks'] as List).isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('暂未找到足够匹配的题库。可以补充科目、地区或版本后重新检索。'),
+            ),
+          for (final bank in result['banks'] as List)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(bank['name'] as String),
+              subtitle: Text(bank['fit'] as String),
+              children: [
+                for (final entry in {
+                  '版本': 'version',
+                  '费用': 'cost',
+                  '局限': 'limitations',
+                  '导入条件': 'importability',
+                }.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('${entry.key}：${bank[entry.value]}'),
+                    ),
+                  ),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          ExternalActions.open(context, bank['url'] as String),
+                      child: const Text('查看题库原页'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(
+                            text:
+                                '考试：${_document!['goal']['exam']}\n题库候选：${bank['name']}\n来源：${bank['url']}\n版本：${bank['version']}\n导入条件：${bank['importability']}\n请先核对授权与内容，再下载资料导入；此链接并非题库文件。',
+                          ),
+                        );
+                        if (!mounted) return;
+                        await ExternalActions.practice(context);
+                      },
+                      child: const Text('复制资料并打开掌心刷题'),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    '不会自动购买或导入网页。请确认授权后，在掌心刷题选择题库或导入资料。',
+                    style: AppTheme.bodySmall,
                   ),
                 ),
-              Wrap(
-                spacing: 8,
+              ],
+            ),
+          const SizedBox(height: 22),
+        ],
+        if (_section == 0) ...[
+          const Text('每日复习任务', style: AppTheme.heading3),
+          const SizedBox(height: 8),
+          Text(
+            '${plan['days']} 个学习日，每天 ${_document!['goal']['minutes']} 分钟；已完成 $completed / ${tasks.length} 项',
+          ),
+          const SizedBox(height: 8),
+          Semantics(
+            label: '已完成 $completed 项，共 ${tasks.length} 项',
+            child: SizedBox(
+              height: 4,
+              child: Stack(
                 children: [
-                  TextButton(
-                    onPressed: () =>
-                        ExternalActions.open(context, bank['url'] as String),
-                    child: const Text('查看题库原页'),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      await Clipboard.setData(
-                        ClipboardData(
-                          text:
-                              '考试：${_document!['goal']['exam']}\n题库候选：${bank['name']}\n来源：${bank['url']}\n版本：${bank['version']}\n导入条件：${bank['importability']}\n请先核对授权与内容，再下载资料导入；此链接并非题库文件。',
-                        ),
-                      );
-                      if (!mounted) return;
-                      await ExternalActions.practice(context);
-                    },
-                    child: const Text('复制资料并打开掌心刷题'),
+                  Container(color: AppTheme.dividerColor),
+                  FractionallySizedBox(
+                    widthFactor: tasks.isEmpty ? 0 : completed / tasks.length,
+                    child: Container(color: AppTheme.primaryColor),
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Text(
-                  '不会自动购买或导入网页。请确认授权后，在掌心刷题选择题库或导入资料。',
-                  style: AppTheme.bodySmall,
-                ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(plan['notice'] as String, style: AppTheme.bodySmall),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _reschedule,
+              icon: const Icon(Icons.event_repeat),
+              label: const Text('从今天重新安排未完成任务'),
+            ),
+          ),
+          for (final date in shown) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 6),
+              child: Text(date, style: AppTheme.heading3),
+            ),
+            for (final task in tasks.where((t) => t['date'] == date))
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: task['done'] == true,
+                onChanged: (value) => _done(task, value ?? false),
+                title: Text(task['title'] as String),
+                subtitle: Text('${task['subject']}，${task['minutes']} 分钟'),
+              ),
+          ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: _week > 0 ? () => setState(() => _week--) : null,
+                child: const Text('上一周'),
+              ),
+              Text('第 ${_week + 1} 周'),
+              TextButton(
+                onPressed: (_week + 1) * 7 < dates.length
+                    ? () => setState(() => _week++)
+                    : null,
+                child: const Text('下一周'),
               ),
             ],
           ),
-        const SizedBox(height: 22),
-        ],
-        if (_section == 0) ...[
-        const Text('每日复习任务', style: AppTheme.heading3),
-        const SizedBox(height: 8),
-        Text(
-          '${plan['days']} 个学习日，每天 ${_document!['goal']['minutes']} 分钟；已完成 $completed / ${tasks.length} 项',
-        ),
-        const SizedBox(height: 8),
-        Semantics(label: '已完成 $completed 项，共 ${tasks.length} 项', child: SizedBox(height: 4, child: Stack(children: [
-          Container(color: AppTheme.dividerColor),
-          FractionallySizedBox(widthFactor: tasks.isEmpty ? 0 : completed / tasks.length, child: Container(color: AppTheme.primaryColor)),
-        ]))),
-        const SizedBox(height: 12),
-        Text(plan['notice'] as String, style: AppTheme.bodySmall),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: _reschedule,
-            icon: const Icon(Icons.event_repeat),
-            label: const Text('从今天重新安排未完成任务'),
-          ),
-        ),
-        for (final date in shown) ...[
-          Padding(
-            padding: const EdgeInsets.only(top: 20, bottom: 6),
-            child: Text(date, style: AppTheme.heading3),
-          ),
-          for (final task in tasks.where((t) => t['date'] == date))
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: task['done'] == true,
-              onChanged: (value) => _done(task, value ?? false),
-              title: Text(task['title'] as String),
-              subtitle: Text('${task['subject']}，${task['minutes']} 分钟'),
-            ),
-        ],
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton(
-              onPressed: _week > 0 ? () => setState(() => _week--) : null,
-              child: const Text('上一周'),
-            ),
-            Text('第 ${_week + 1} 周'),
-            TextButton(
-              onPressed: (_week + 1) * 7 < dates.length
-                  ? () => setState(() => _week++)
-                  : null,
-              child: const Text('下一周'),
-            ),
-          ],
-        ),
         ],
       ],
     );
@@ -651,18 +676,18 @@ class _AssistantScreenState extends State<AssistantScreen> {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 36),
             children: [
               if (_result == null) ...[
-              const Text(
-                '想考什么，\n我们从这里开始。',
-                style: TextStyle(
-                  fontSize: 30,
-                  height: 1.25,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                const Text(
+                  '想考什么，\n我们从这里开始。',
+                  style: TextStyle(
+                    fontSize: 30,
+                    height: 1.25,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text('查官方信息，找合适题库，把复习安排进每一天。', style: AppTheme.bodySmall),
-              const SizedBox(height: 24),
+                const SizedBox(height: 12),
+                const Text('查官方信息，找合适题库，把复习安排进每一天。', style: AppTheme.bodySmall),
+                const SizedBox(height: 24),
               ],
               if (_error != null)
                 Padding(
@@ -716,7 +741,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
                 const SizedBox(height: 16),
               ],
               if (!_busy && _job == null)
-                if (_result == null) _goalForm() else ExpansionTile(title: const Text('调整目标并重新研究'), children: [_goalForm()]),
+                if (_result == null)
+                  _goalForm()
+                else
+                  ExpansionTile(
+                    title: const Text('调整目标并重新研究'),
+                    children: [_goalForm()],
+                  ),
             ],
           ),
   );
