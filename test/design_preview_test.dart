@@ -1,7 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:examhub/app.dart';
+import 'package:examhub/screens/assistant_screen.dart';
+import 'package:examhub/services/assistant_service.dart';
+import 'package:examhub/theme/app_theme.dart';
 import 'package:examhub/database/database_helper.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
@@ -90,6 +94,24 @@ void main() {
     await capture(tester, key, '我的考试');
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('助手目标与真实联网实测结果页面预览', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final key = GlobalKey();
+    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(theme: AppTheme.lightTheme, home: const AssistantScreen())));
+    await capture(tester, key, '备考助手目标');
+    await tester.pumpWidget(const SizedBox.shrink());
+    final sample = jsonDecode(File('test/fixtures/assistant_live_research_20261114.json').readAsStringSync()) as Map<String, dynamic>;
+    await AssistantStore().write('assistant:freeform', {'goal': sample['goal'], 'result': sample['result']});
+    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(theme: AppTheme.lightTheme, home: const AssistantScreen())));
+    await capture(tester, key, '备考助手联网实测结果');
+    await tester.ensureVisible(find.text('每日复习任务'));
+    await capture(tester, key, '备考助手每日任务');
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('320px 及放大字号时导航和考试库不溢出', (tester) async {

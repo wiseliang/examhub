@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../services/assistant_service.dart';
 import '../services/external_actions.dart';
+import '../services/study_planner.dart';
 import '../theme/app_theme.dart';
 
 class AssistantScreen extends StatefulWidget {
@@ -310,6 +311,15 @@ class _AssistantScreenState extends State<AssistantScreen> {
     }
   }
 
+  Future<void> _reschedule() async {
+    final old = _result!['plan'];
+    final updated = rescheduleStudyPlan(old as Map<String, dynamic>, _document!['goal'] as Map<String, dynamic>, DateTime.now());
+    setState(() { _result!['plan'] = updated; _week = 0; });
+    try { await _save(); } catch (_) {
+      if (mounted) { setState(() { _result!['plan'] = old; _error = '重新安排未保存，请重试。'; }); }
+    }
+  }
+
   Widget _field(
     TextEditingController c,
     String label, {
@@ -523,6 +533,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
         ),
         const SizedBox(height: 12),
         Text(plan['notice'] as String, style: AppTheme.bodySmall),
+        Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: _reschedule, icon: const Icon(Icons.event_repeat), label: const Text('从今天重新安排未完成任务'))),
         for (final date in shown) ...[
           Padding(
             padding: const EdgeInsets.only(top: 20, bottom: 6),

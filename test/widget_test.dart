@@ -135,7 +135,7 @@ void main() {
     await tester.pumpWidget(const ExamHubApp());
     await tester.pumpAndSettle();
     expect(find.text('考试通'), findsOneWidget);
-    expect(find.text('考试目录'), findsOneWidget);
+    expect(find.text('让助手帮我备考'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.search_rounded).first);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'CPA');

@@ -119,6 +119,7 @@ void main() {
     final api = FixtureApi(fixture());
     await open(tester, api: api);
     await tester.ensureVisible(find.text('检索资料并规划复习'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('检索资料并规划复习'));
     await tester.pumpAndSettle();
     expect(api.starts, 0);
@@ -129,11 +130,13 @@ void main() {
     final api = FixtureApi(fixture());
     await open(tester, api: api);
     await tester.ensureVisible(find.text('检索资料并规划复习'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('检索资料并规划复习'));
     await tester.pumpAndSettle();
     expect(api.starts, 1);
     expect(find.text('这是测试固定数据，不是实际检索结论。'), findsOneWidget);
     await tester.ensureVisible(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pumpAndSettle();
     final saved = (await store.read('assistant:freeform'))!;
@@ -142,6 +145,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await open(tester, api: api);
     await tester.ensureVisible(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
     expect(
       tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
       isTrue,
@@ -153,6 +157,7 @@ void main() {
     final api = FixtureApi(fixture(), fail: true);
     await open(tester, api: api);
     await tester.ensureVisible(find.text('检索资料并规划复习'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('检索资料并规划复习'));
     await tester.pumpAndSettle();
     expect(find.text('测试：服务不可用'), findsOneWidget);
