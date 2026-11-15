@@ -128,7 +128,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets('真实异步流程接收结果并打卡，重开保留进度', (tester) async {
-    await store.write('assistant:freeform', {'goal': goal, 'palmBank': {'id': 'demo-bank', 'title': '演示私有题库', 'count': 12, 'userId': 'demo-user'}});
+    await store.write('assistant:freeform', {
+      'goal': goal,
+      'palmBank': {
+        'id': 'demo-bank',
+        'title': '演示私有题库',
+        'count': 12,
+        'userId': 'demo-user',
+      },
+    });
     final api = FixtureApi(fixture());
     await open(tester, api: api);
     await tester.ensureVisible(find.text('检索资料并规划复习'));
