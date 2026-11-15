@@ -6,6 +6,8 @@ import 'package:examhub/app.dart';
 import 'package:examhub/screens/assistant_screen.dart';
 import 'package:examhub/services/assistant_service.dart';
 import 'package:examhub/theme/app_theme.dart';
+import 'package:examhub/screens/palm_quiz_screen.dart';
+import 'package:examhub/services/palm_quiz_service.dart';
 import 'package:examhub/database/database_helper.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
@@ -141,6 +143,30 @@ void main() {
     await capture(tester, key, '备考助手题库候选');
 
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('掌心题库登录与授权列表预览（独立演示数据）', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final client = PalmQuizClient(transport: (method, path, body, token) async {
+      if (path == '/login') return {'token': 'demo-session', 'user': {'id': 'demo-user', 'username': '演示账号'}};
+      return [
+        {'id': 'demo-bank-1', 'title': '二级 Python 官方样题整理（演示）', 'count': 24, 'shared': 0},
+        {'id': 'demo-bank-2', 'title': 'Python 基础练习（演示）', 'count': 18, 'shared': 1},
+      ];
+    });
+    final key = GlobalKey();
+    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(debugShowCheckedModeBanner: false, theme: AppTheme.lightTheme, home: PalmQuizScreen(exam: '全国计算机等级考试二级 Python', client: client))));
+    await capture(tester, key, '掌心题库登录');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await client.login('demo', 'demo-password');
+    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(debugShowCheckedModeBanner: false, theme: AppTheme.lightTheme, home: PalmQuizScreen(exam: '全国计算机等级考试二级 Python', client: client))));
+    await capture(tester, key, '掌心题库授权列表_演示');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets('320px 及放大字号时导航和考试库不溢出', (tester) async {

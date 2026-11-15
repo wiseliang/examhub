@@ -61,6 +61,7 @@ class AssistantApi {
         HttpHeaders.authorizationHeader,
         'Bearer $accessCode',
       );
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.headers.contentType = ContentType.json;
       if (body != null) request.write(jsonEncode(body));
       final response = await request.close().timeout(
