@@ -7,6 +7,7 @@ import '../services/assistant_service.dart';
 import '../services/external_actions.dart';
 import '../services/study_planner.dart';
 import '../theme/app_theme.dart';
+import 'palm_quiz_screen.dart';
 
 class AssistantScreen extends StatefulWidget {
   final String initialExam;
@@ -59,8 +60,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
   Future<void> _load() async {
     try {
       final config = await _store.read('connection');
-      if (AssistantApi.endpoint.isEmpty) {
-        AssistantApi.endpoint = config?['endpoint'] as String? ?? '';
+      if (AssistantApi.endpoint.isEmpty || AssistantApi.endpoint == AssistantApi.defaultEndpoint) {
+        AssistantApi.endpoint = config?['endpoint'] as String? ?? AssistantApi.defaultEndpoint;
       }
       final document = await _store.read(_key);
       if (!mounted) return;
@@ -173,6 +174,29 @@ class _AssistantScreenState extends State<AssistantScreen> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _choosePalm() async {
+    final binding = await Navigator.push<Map<String, dynamic>>(
+      context, MaterialPageRoute(builder: (_) => PalmQuizScreen(exam: _exam.text.trim())),
+    );
+    if (binding == null || !mounted) return;
+    final previous = _document?['palmBank'];
+    setState(() { _document ??= {}; _document!['palmBank'] = binding; });
+    try { await _save(); } catch (_) {
+      if (mounted) { setState(() => _document!['palmBank'] = previous); _report('题库选择未保存，请重试。'); }
+    }
+  }
+
+  Widget _palmBank() => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.menu_book_outlined, color: AppTheme.primaryColor),
+      title: Text(_document?['palmBank'] == null ? '查找我的掌心题库' : '已选：${_document!['palmBank']['title']}'),
+      subtitle: Text(_document?['palmBank'] == null ? '登录后按名称查找已有题库' : '${_document!['palmBank']['count']} 题；这是本地保存的选择，当前权限和版本仍需核对'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: _choosePalm,
+    ),
+  ]);
+
   Future<void> _start() async {
     if (!_form.currentState!.validate()) return;
     final now = DateTime.now();
@@ -206,7 +230,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
     try {
       final reply = await _api.request('POST', '/v1/research', goal);
       _job = reply['id'] as String;
+      final bank = _document?['palmBank'];
       _document = {
+        if (bank != null) 'palmBank': bank,
         'goal': goal,
         'job': _job,
         'jobEndpoint': AssistantApi.endpoint,
@@ -463,6 +489,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(_document!['goal']['exam'] as String, style: AppTheme.heading3),
+        _palmBank(),
         const SizedBox(height: 8),
         Text(
           result['summary'] as String,
@@ -663,6 +690,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
     appBar: AppBar(
       title: const Text('备考助手'),
       actions: [
+        IconButton(onPressed: _busy ? null : _choosePalm, tooltip: '我的掌心题库', icon: const Icon(Icons.menu_book_outlined)),
         IconButton(
           onPressed: _busy ? null : _connect,
           tooltip: '连接备考服务',

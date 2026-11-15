@@ -26,7 +26,8 @@ class AssistantStore {
 }
 
 class AssistantApi {
-  static String endpoint = '';
+  static const defaultEndpoint = 'https://wiseliang.cloud/examhub-assistant';
+  static String endpoint = defaultEndpoint;
   // 个人访问码仅保留在本次进程内，不写入安装包、日志或本地数据库。
   static String accessCode = '';
 
@@ -46,6 +47,7 @@ class AssistantApi {
       throw Exception('请先连接 HTTPS 备考服务并填写个人访问码。');
     }
     final client = HttpClient()
+      ..userAgent = 'ExamHub/1.4 (+https://wiseliang.cloud; Android)'
       ..connectionTimeout = const Duration(seconds: 15);
     try {
       final request = await client
@@ -54,6 +56,7 @@ class AssistantApi {
             Uri.parse('${endpoint.replaceAll(RegExp(r'/+$'), '')}$path'),
           )
           .timeout(const Duration(seconds: 20));
+      request.followRedirects = false;
       request.headers.set(
         HttpHeaders.authorizationHeader,
         'Bearer $accessCode',
@@ -69,6 +72,9 @@ class AssistantApi {
         bytes += chunk.length;
         if (bytes > 2 * 1024 * 1024) throw Exception('服务返回的数据过大。');
         chunks.addAll(chunk);
+      }
+      if (response.statusCode >= 300 && response.statusCode < 400) {
+        throw Exception('服务地址发生跳转，请填写最终 HTTPS 地址。');
       }
       final data = jsonDecode(utf8.decode(chunks)) as Map<String, dynamic>;
       if (response.statusCode >= 400) {

@@ -12,6 +12,7 @@ class FixtureApi extends AssistantApi {
   final Map<String, dynamic> result;
   final bool fail;
   int starts = 0;
+  Map<String, dynamic>? lastGoal;
   FixtureApi(this.result, {this.fail = false});
   @override
   Future<Map<String, dynamic>> request(
@@ -21,6 +22,7 @@ class FixtureApi extends AssistantApi {
   ]) async {
     if (method == 'POST') {
       starts++;
+      lastGoal = body;
       if (fail) throw Exception('测试：服务不可用');
       return {'id': 'fixture'};
     }
@@ -126,7 +128,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets('真实异步流程接收结果并打卡，重开保留进度', (tester) async {
-    await store.write('assistant:freeform', {'goal': goal});
+    await store.write('assistant:freeform', {'goal': goal, 'palmBank': {'id': 'demo-bank', 'title': '演示私有题库', 'count': 12, 'userId': 'demo-user'}});
     final api = FixtureApi(fixture());
     await open(tester, api: api);
     await tester.ensureVisible(find.text('检索资料并规划复习'));
@@ -134,6 +136,8 @@ void main() {
     await tester.tap(find.text('检索资料并规划复习'));
     await tester.pumpAndSettle();
     expect(api.starts, 1);
+    expect(api.lastGoal!.containsKey('palmBank'), isFalse);
+    expect(api.lastGoal!.values, isNot(contains('演示私有题库')));
     expect(find.text('这是测试固定数据，不是实际检索结论。'), findsOneWidget);
     await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.pumpAndSettle();
@@ -142,6 +146,7 @@ void main() {
     final saved = (await store.read('assistant:freeform'))!;
     expect(saved['result']['plan']['tasks'][0]['done'], isTrue);
     expect(saved.containsKey('job'), isFalse);
+    expect(saved['palmBank']['id'], 'demo-bank');
     await tester.pumpWidget(const SizedBox.shrink());
     await open(tester, api: api);
     await tester.ensureVisible(find.byType(CheckboxListTile));
