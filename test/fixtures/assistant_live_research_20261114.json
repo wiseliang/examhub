@@ -1,0 +1,1866 @@
+{
+  "note": "2026-11-14 真实 Codex 联网实测的 AI 整理结果，来源内容尚未经人工逐项核验。仅用于可重现的界面测试；App 不加载此文件作为检索结果。",
+  "goal": {
+    "exam": "全国计算机等级考试二级 Python",
+    "region": "上海",
+    "targetDate": "2027-03-01",
+    "minutes": 45,
+    "level": "学过 Python 基础",
+    "preferences": "官方样题优先，免费资料优先",
+    "studyDays": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "result": {
+    "summary": "已确认目标为教育部教育考试院主办的全国计算机等级考试（NCRE）二级Python语言程序设计，科目代码66，区别于青少年Python等级考试。官网当前列有2025年版Python及公共基础知识大纲、2025年发布的官方样题。按该大纲，上机考试120分钟，选择题40分（含公共基础10分）、操作题60分。截至2026-11-14，本次检索未核实2027年上海报名通知、考试日期及适用大纲；2027-03-01仅作为个人复习截止日。建议按每日45分钟安排：公共基础10分钟、Python编程25分钟、错题复盘10分钟，先用免费官方样题摸底。",
+    "uncertainties": [
+      "2027年上海报名时间、考试时间、考点、费用及开考安排尚未核实，不能沿用2026年日期或收费。",
+      "当前官网列出的Python大纲为2025年版，2027年是否继续适用须等待官方确认。",
+      "官方样题用于了解题型，不能据此认定覆盖完整考试题库。",
+      "出版社电子题库的版本年份、实际获取条件、费用及导入授权待核验。",
+      "将用户提供的45分钟理解为每日可用于复习的时间。"
+    ],
+    "subjects": [
+      {
+        "name": "公共基础知识",
+        "focus": "计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。"
+      },
+      {
+        "name": "语法与基本数据类型",
+        "focus": "输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。"
+      },
+      {
+        "name": "控制结构与函数",
+        "focus": "分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。"
+      },
+      {
+        "name": "组合数据与文件",
+        "focus": "列表、集合、字典，文件读写及一二维数据、CSV处理。"
+      },
+      {
+        "name": "程序设计方法与上机",
+        "focus": "过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。"
+      },
+      {
+        "name": "Python计算生态",
+        "focus": "turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。"
+      }
+    ],
+    "sources": [
+      {
+        "title": "上海市教育考试院：2026年9月NCRE报名通知",
+        "url": "https://www.shmeea.edu.cn/page/08000/20260731/20530.html",
+        "kind": "official",
+        "finding": "已打开上海官方原文，适用2026年9月；不能作为2027年报名安排。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "上海市教育考试院：NCRE级别科目设置及证书体系",
+        "url": "https://www.shmeea.edu.cn/download/20260123/1.pdf",
+        "kind": "official",
+        "finding": "确认二级Python语言程序设计代码66，考试时间120分钟。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "中国教育考试网：全国计算机等级考试考试大纲",
+        "url": "https://ncre.neea.edu.cn/html1/report/2412/185-1.htm",
+        "kind": "official",
+        "finding": "当前列表提供2025年版Python及公共基础知识大纲。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "二级Python语言程序设计考试大纲（2025年版）",
+        "url": "https://ncre.neea.edu.cn/res/Home/2412/dcf184e2f5b6d8ccdb90b3f8eb417ab6.pdf",
+        "kind": "official",
+        "finding": "核对学习范围、题型分值及IDLE开发要求；2027年适用性待确认。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "二级公共基础知识考试大纲（2025年版）",
+        "url": "https://ncre.neea.edu.cn/res/Home/2412/7dad16783ce29eb4d7d097e962361321.pdf",
+        "kind": "official",
+        "finding": "确认公共基础学习范围，与其他二级科目合并考核。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "中国教育考试网：官方试题选登",
+        "url": "https://ncre.neea.edu.cn/xhtml1/category/1507/848-1.htm",
+        "kind": "official",
+        "finding": "Python和公共基础样题均标注2025-01-02发布。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "高等教育出版社：全国计算机等级考试二级教程——Python语言程序设计",
+        "url": "https://www.hep.com.cn/book/show/b0697b77-d7a9-44ec-82ea-6e5caa655fa6",
+        "kind": "publisher",
+        "finding": "检索到教育部教育考试院编写的2025年出版教材；属于教材，未将其当作已核实题库。",
+        "verification": "AI 检索整理，需打开原文核对"
+      },
+      {
+        "title": "清华大学出版社：图书简介（编号09063001）",
+        "url": "https://www.tup.com.cn/booksCenter/bookbrief?id=09063001",
+        "kind": "publisher",
+        "finding": "原文明确提供二级Python电子题库，含其所称真题和模拟题；获取条件和年份未确认。",
+        "verification": "AI 检索整理，需打开原文核对"
+      }
+    ],
+    "banks": [
+      {
+        "name": "教育部教育考试院：二级Python官方样题及参考答案",
+        "url": "https://ncre.neea.edu.cn/xhtml1/report/2501/88-1.htm",
+        "fit": "与目标科目直接匹配，优先用于摸底和熟悉题型，符合官方、免费优先。",
+        "version": "2025-01-02发布；未标为2027专版。",
+        "cost": "已确认官网公开免费阅读及下载。",
+        "limitations": "属于样题，不是完整题库；2027年题型适用性待核验。",
+        "importability": "可通过官网获取供个人学习；未发现批量导入或再分发授权，合法导入考试通待核验。"
+      },
+      {
+        "name": "教育部教育考试院：二级公共基础知识官方样题及参考答案",
+        "url": "https://ncre.neea.edu.cn/xhtml1/report/2501/104-1.htm",
+        "fit": "匹配二级Python中的公共基础知识部分，适合补齐Python基础学习之外的知识。",
+        "version": "2025-01-02发布；未标为2027专版。",
+        "cost": "已确认官网公开免费提供。",
+        "limitations": "仅覆盖公共基础样题，需配合Python编程练习。",
+        "importability": "官网提供阅读和下载入口；批量导入、改编及再分发许可待核验。"
+      },
+      {
+        "name": "清华大学出版社图书配套二级Python电子题库",
+        "url": "https://www.tup.com.cn/booksCenter/bookbrief?id=09063001",
+        "fit": "出版社原文明确面向NCRE二级Python，提供电子版真题和模拟题，可作为补充候选。",
+        "version": "年份待核验；简介说明教材基于Python 3.8。",
+        "cost": "待核验，尚未确认是否免费、是否需购书或注册。",
+        "limitations": "未核实题库下载入口、更新年份、答案质量及2025版大纲覆盖情况；未确认考试机构授权。",
+        "importability": "简介称为开源学习资源，但未见具体许可证、文件格式或导入授权，合法导入待核验。"
+      }
+    ],
+    "searchedAt": "2026-11-14T15:23:40.905Z",
+    "searches": 4,
+    "plan": {
+      "startDate": "2026-11-14",
+      "targetDate": "2027-03-01",
+      "totalMinutes": 4815,
+      "days": 107,
+      "tasks": [
+        {
+          "id": "2026-11-14-study",
+          "date": "2026-11-14",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-14-review",
+          "date": "2026-11-14",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-15-study",
+          "date": "2026-11-15",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-15-review",
+          "date": "2026-11-15",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-16-study",
+          "date": "2026-11-16",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-16-review",
+          "date": "2026-11-16",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-17-study",
+          "date": "2026-11-17",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-17-review",
+          "date": "2026-11-17",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-18-study",
+          "date": "2026-11-18",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-18-review",
+          "date": "2026-11-18",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-19-study",
+          "date": "2026-11-19",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-19-review",
+          "date": "2026-11-19",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-20-study",
+          "date": "2026-11-20",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-20-review",
+          "date": "2026-11-20",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-21-study",
+          "date": "2026-11-21",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-21-review",
+          "date": "2026-11-21",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-22-study",
+          "date": "2026-11-22",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-22-review",
+          "date": "2026-11-22",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-23-study",
+          "date": "2026-11-23",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-23-review",
+          "date": "2026-11-23",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-24-study",
+          "date": "2026-11-24",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-24-review",
+          "date": "2026-11-24",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-25-study",
+          "date": "2026-11-25",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-25-review",
+          "date": "2026-11-25",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-26-study",
+          "date": "2026-11-26",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-26-review",
+          "date": "2026-11-26",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-27-study",
+          "date": "2026-11-27",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-27-review",
+          "date": "2026-11-27",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-28-study",
+          "date": "2026-11-28",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-28-review",
+          "date": "2026-11-28",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-29-study",
+          "date": "2026-11-29",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-29-review",
+          "date": "2026-11-29",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-11-30-study",
+          "date": "2026-11-30",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-11-30-review",
+          "date": "2026-11-30",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-01-study",
+          "date": "2026-12-01",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-01-review",
+          "date": "2026-12-01",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-02-study",
+          "date": "2026-12-02",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-02-review",
+          "date": "2026-12-02",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-03-study",
+          "date": "2026-12-03",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-03-review",
+          "date": "2026-12-03",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-04-study",
+          "date": "2026-12-04",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-04-review",
+          "date": "2026-12-04",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-05-study",
+          "date": "2026-12-05",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-05-review",
+          "date": "2026-12-05",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-06-study",
+          "date": "2026-12-06",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-06-review",
+          "date": "2026-12-06",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-07-study",
+          "date": "2026-12-07",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-07-review",
+          "date": "2026-12-07",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-08-study",
+          "date": "2026-12-08",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-08-review",
+          "date": "2026-12-08",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-09-study",
+          "date": "2026-12-09",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-09-review",
+          "date": "2026-12-09",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-10-study",
+          "date": "2026-12-10",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-10-review",
+          "date": "2026-12-10",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-11-study",
+          "date": "2026-12-11",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-11-review",
+          "date": "2026-12-11",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-12-study",
+          "date": "2026-12-12",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-12-review",
+          "date": "2026-12-12",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-13-study",
+          "date": "2026-12-13",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-13-review",
+          "date": "2026-12-13",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-14-study",
+          "date": "2026-12-14",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-14-review",
+          "date": "2026-12-14",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-15-study",
+          "date": "2026-12-15",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-15-review",
+          "date": "2026-12-15",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-16-study",
+          "date": "2026-12-16",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-16-review",
+          "date": "2026-12-16",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-17-study",
+          "date": "2026-12-17",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-17-review",
+          "date": "2026-12-17",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-18-study",
+          "date": "2026-12-18",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-18-review",
+          "date": "2026-12-18",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-19-study",
+          "date": "2026-12-19",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-19-review",
+          "date": "2026-12-19",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-20-study",
+          "date": "2026-12-20",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-20-review",
+          "date": "2026-12-20",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-21-study",
+          "date": "2026-12-21",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-21-review",
+          "date": "2026-12-21",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-22-study",
+          "date": "2026-12-22",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-22-review",
+          "date": "2026-12-22",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-23-study",
+          "date": "2026-12-23",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-23-review",
+          "date": "2026-12-23",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-24-study",
+          "date": "2026-12-24",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-24-review",
+          "date": "2026-12-24",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-25-study",
+          "date": "2026-12-25",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-25-review",
+          "date": "2026-12-25",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-26-study",
+          "date": "2026-12-26",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-26-review",
+          "date": "2026-12-26",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-27-study",
+          "date": "2026-12-27",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-27-review",
+          "date": "2026-12-27",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-28-study",
+          "date": "2026-12-28",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-28-review",
+          "date": "2026-12-28",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-29-study",
+          "date": "2026-12-29",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-29-review",
+          "date": "2026-12-29",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-30-study",
+          "date": "2026-12-30",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-30-review",
+          "date": "2026-12-30",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2026-12-31-study",
+          "date": "2026-12-31",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2026-12-31-review",
+          "date": "2026-12-31",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-01-study",
+          "date": "2027-01-01",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-01-review",
+          "date": "2027-01-01",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-02-study",
+          "date": "2027-01-02",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-02-review",
+          "date": "2027-01-02",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-03-study",
+          "date": "2027-01-03",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-03-review",
+          "date": "2027-01-03",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-04-study",
+          "date": "2027-01-04",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-04-review",
+          "date": "2027-01-04",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-05-study",
+          "date": "2027-01-05",
+          "subject": "程序设计方法与上机",
+          "title": "理解基础：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-05-review",
+          "date": "2027-01-05",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-06-study",
+          "date": "2027-01-06",
+          "subject": "Python计算生态",
+          "title": "理解基础：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-06-review",
+          "date": "2027-01-06",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-07-study",
+          "date": "2027-01-07",
+          "subject": "公共基础知识",
+          "title": "理解基础：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-07-review",
+          "date": "2027-01-07",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-08-study",
+          "date": "2027-01-08",
+          "subject": "语法与基本数据类型",
+          "title": "理解基础：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-08-review",
+          "date": "2027-01-08",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-09-study",
+          "date": "2027-01-09",
+          "subject": "控制结构与函数",
+          "title": "理解基础：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-09-review",
+          "date": "2027-01-09",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-10-study",
+          "date": "2027-01-10",
+          "subject": "组合数据与文件",
+          "title": "理解基础：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-10-review",
+          "date": "2027-01-10",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-11-study",
+          "date": "2027-01-11",
+          "subject": "程序设计方法与上机",
+          "title": "专项练习：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-11-review",
+          "date": "2027-01-11",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-12-study",
+          "date": "2027-01-12",
+          "subject": "Python计算生态",
+          "title": "专项练习：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-12-review",
+          "date": "2027-01-12",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-13-study",
+          "date": "2027-01-13",
+          "subject": "公共基础知识",
+          "title": "专项练习：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-13-review",
+          "date": "2027-01-13",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-14-study",
+          "date": "2027-01-14",
+          "subject": "语法与基本数据类型",
+          "title": "专项练习：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-14-review",
+          "date": "2027-01-14",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-15-study",
+          "date": "2027-01-15",
+          "subject": "控制结构与函数",
+          "title": "专项练习：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-15-review",
+          "date": "2027-01-15",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-16-study",
+          "date": "2027-01-16",
+          "subject": "组合数据与文件",
+          "title": "专项练习：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-16-review",
+          "date": "2027-01-16",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-17-study",
+          "date": "2027-01-17",
+          "subject": "程序设计方法与上机",
+          "title": "专项练习：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-17-review",
+          "date": "2027-01-17",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-18-study",
+          "date": "2027-01-18",
+          "subject": "Python计算生态",
+          "title": "专项练习：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-18-review",
+          "date": "2027-01-18",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-19-study",
+          "date": "2027-01-19",
+          "subject": "公共基础知识",
+          "title": "专项练习：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-19-review",
+          "date": "2027-01-19",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-20-study",
+          "date": "2027-01-20",
+          "subject": "语法与基本数据类型",
+          "title": "专项练习：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-20-review",
+          "date": "2027-01-20",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-21-study",
+          "date": "2027-01-21",
+          "subject": "控制结构与函数",
+          "title": "专项练习：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-21-review",
+          "date": "2027-01-21",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-22-study",
+          "date": "2027-01-22",
+          "subject": "组合数据与文件",
+          "title": "专项练习：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-22-review",
+          "date": "2027-01-22",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-23-study",
+          "date": "2027-01-23",
+          "subject": "程序设计方法与上机",
+          "title": "专项练习：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-23-review",
+          "date": "2027-01-23",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-24-study",
+          "date": "2027-01-24",
+          "subject": "Python计算生态",
+          "title": "专项练习：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-24-review",
+          "date": "2027-01-24",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-25-study",
+          "date": "2027-01-25",
+          "subject": "公共基础知识",
+          "title": "专项练习：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-25-review",
+          "date": "2027-01-25",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-26-study",
+          "date": "2027-01-26",
+          "subject": "语法与基本数据类型",
+          "title": "专项练习：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-26-review",
+          "date": "2027-01-26",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-27-study",
+          "date": "2027-01-27",
+          "subject": "控制结构与函数",
+          "title": "专项练习：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-27-review",
+          "date": "2027-01-27",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-28-study",
+          "date": "2027-01-28",
+          "subject": "组合数据与文件",
+          "title": "专项练习：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-28-review",
+          "date": "2027-01-28",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-29-study",
+          "date": "2027-01-29",
+          "subject": "程序设计方法与上机",
+          "title": "专项练习：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-29-review",
+          "date": "2027-01-29",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-30-study",
+          "date": "2027-01-30",
+          "subject": "Python计算生态",
+          "title": "专项练习：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-30-review",
+          "date": "2027-01-30",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-01-31-study",
+          "date": "2027-01-31",
+          "subject": "公共基础知识",
+          "title": "专项练习：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-01-31-review",
+          "date": "2027-01-31",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-01-study",
+          "date": "2027-02-01",
+          "subject": "语法与基本数据类型",
+          "title": "专项练习：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-01-review",
+          "date": "2027-02-01",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-02-study",
+          "date": "2027-02-02",
+          "subject": "控制结构与函数",
+          "title": "专项练习：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-02-review",
+          "date": "2027-02-02",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-03-study",
+          "date": "2027-02-03",
+          "subject": "组合数据与文件",
+          "title": "专项练习：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-03-review",
+          "date": "2027-02-03",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-04-study",
+          "date": "2027-02-04",
+          "subject": "程序设计方法与上机",
+          "title": "专项练习：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-04-review",
+          "date": "2027-02-04",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-05-study",
+          "date": "2027-02-05",
+          "subject": "Python计算生态",
+          "title": "专项练习：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-05-review",
+          "date": "2027-02-05",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-06-study",
+          "date": "2027-02-06",
+          "subject": "公共基础知识",
+          "title": "专项练习：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-06-review",
+          "date": "2027-02-06",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-07-study",
+          "date": "2027-02-07",
+          "subject": "语法与基本数据类型",
+          "title": "专项练习：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-07-review",
+          "date": "2027-02-07",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-08-study",
+          "date": "2027-02-08",
+          "subject": "控制结构与函数",
+          "title": "专项练习：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-08-review",
+          "date": "2027-02-08",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-09-study",
+          "date": "2027-02-09",
+          "subject": "组合数据与文件",
+          "title": "专项练习：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-09-review",
+          "date": "2027-02-09",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-10-study",
+          "date": "2027-02-10",
+          "subject": "程序设计方法与上机",
+          "title": "专项练习：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-10-review",
+          "date": "2027-02-10",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-11-study",
+          "date": "2027-02-11",
+          "subject": "Python计算生态",
+          "title": "专项练习：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-11-review",
+          "date": "2027-02-11",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-12-study",
+          "date": "2027-02-12",
+          "subject": "公共基础知识",
+          "title": "模拟与错题复盘：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-12-review",
+          "date": "2027-02-12",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-13-study",
+          "date": "2027-02-13",
+          "subject": "语法与基本数据类型",
+          "title": "模拟与错题复盘：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-13-review",
+          "date": "2027-02-13",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-14-study",
+          "date": "2027-02-14",
+          "subject": "控制结构与函数",
+          "title": "模拟与错题复盘：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-14-review",
+          "date": "2027-02-14",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-15-study",
+          "date": "2027-02-15",
+          "subject": "组合数据与文件",
+          "title": "模拟与错题复盘：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-15-review",
+          "date": "2027-02-15",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-16-study",
+          "date": "2027-02-16",
+          "subject": "程序设计方法与上机",
+          "title": "模拟与错题复盘：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-16-review",
+          "date": "2027-02-16",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-17-study",
+          "date": "2027-02-17",
+          "subject": "Python计算生态",
+          "title": "模拟与错题复盘：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-17-review",
+          "date": "2027-02-17",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-18-study",
+          "date": "2027-02-18",
+          "subject": "公共基础知识",
+          "title": "模拟与错题复盘：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-18-review",
+          "date": "2027-02-18",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-19-study",
+          "date": "2027-02-19",
+          "subject": "语法与基本数据类型",
+          "title": "模拟与错题复盘：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-19-review",
+          "date": "2027-02-19",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-20-study",
+          "date": "2027-02-20",
+          "subject": "控制结构与函数",
+          "title": "模拟与错题复盘：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-20-review",
+          "date": "2027-02-20",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-21-study",
+          "date": "2027-02-21",
+          "subject": "组合数据与文件",
+          "title": "模拟与错题复盘：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-21-review",
+          "date": "2027-02-21",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-22-study",
+          "date": "2027-02-22",
+          "subject": "程序设计方法与上机",
+          "title": "模拟与错题复盘：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-22-review",
+          "date": "2027-02-22",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-23-study",
+          "date": "2027-02-23",
+          "subject": "Python计算生态",
+          "title": "模拟与错题复盘：turtle、random、time，pip安装，jieba、PyInstaller、NumPy基础及常见应用领域库名。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-23-review",
+          "date": "2027-02-23",
+          "subject": "Python计算生态",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-24-study",
+          "date": "2027-02-24",
+          "subject": "公共基础知识",
+          "title": "模拟与错题复盘：计算机系统、数据结构与算法、程序设计基础、软件工程、数据库设计；先用官方样题诊断薄弱项。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-24-review",
+          "date": "2027-02-24",
+          "subject": "公共基础知识",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-25-study",
+          "date": "2027-02-25",
+          "subject": "语法与基本数据类型",
+          "title": "模拟与错题复盘：输入输出、数字运算、字符串切片与格式化、类型转换；已有基础，重点检查输出判断和边界错误。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-25-review",
+          "date": "2027-02-25",
+          "subject": "语法与基本数据类型",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-26-study",
+          "date": "2027-02-26",
+          "subject": "控制结构与函数",
+          "title": "模拟与错题复盘：分支、循环、异常处理、参数、作用域和递归，练习读程序与独立编码。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-26-review",
+          "date": "2027-02-26",
+          "subject": "控制结构与函数",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-27-study",
+          "date": "2027-02-27",
+          "subject": "组合数据与文件",
+          "title": "模拟与错题复盘：列表、集合、字典，文件读写及一二维数据、CSV处理。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-27-review",
+          "date": "2027-02-27",
+          "subject": "组合数据与文件",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        },
+        {
+          "id": "2027-02-28-study",
+          "date": "2027-02-28",
+          "subject": "程序设计方法与上机",
+          "title": "模拟与错题复盘：过程式、函数式、生态式编程及蒙特卡洛、递归方法；在IDLE完成基本与综合编程练习。",
+          "minutes": 34,
+          "done": false
+        },
+        {
+          "id": "2027-02-28-review",
+          "date": "2027-02-28",
+          "subject": "程序设计方法与上机",
+          "title": "回忆昨日重点，整理错题与未掌握内容",
+          "minutes": 11,
+          "done": false
+        }
+      ],
+      "notice": "这是按个人截止日与每日时间生成的建议，不代表已确认考试日期；题量按实际做题速度调整。"
+    }
+  }
+}

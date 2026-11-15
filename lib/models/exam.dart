@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 /// 考试核心数据模型
 class Exam {
   final int id;
+  final bool isCustom;
+  final DateTime? targetDate;
   final String name; // 简称，如 "CPA"
   final String fullName; // 全称，如 "注册会计师全国统一考试"
   final String category; // 准入类/水平评价类/国际认证/企业认证/技能等级
@@ -19,6 +23,8 @@ class Exam {
 
   const Exam({
     required this.id,
+    this.isCustom = false,
+    this.targetDate,
     required this.name,
     required this.fullName,
     required this.category,
@@ -40,6 +46,8 @@ class Exam {
   factory Exam.fromMap(Map<String, dynamic> map) {
     return Exam(
       id: map['id'] as int,
+      isCustom: map['origin'] == 'custom',
+      targetDate: DateTime.tryParse(map['target_date'] as String? ?? ''),
       name: map['name'] as String,
       fullName: map['full_name'] as String,
       category: map['category'] as String,
@@ -54,6 +62,7 @@ class Exam {
       examFormat: map['exam_format'] as String? ?? '',
       subjects: ExamSubject.fromJsonList(map['subjects']),
       tags: _parseList(map['tags']),
+      logoAssetPath: map['logo_asset_path'] as String?,
     );
   }
 
@@ -61,6 +70,8 @@ class Exam {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'origin': isCustom ? 'custom' : 'catalog',
+      'target_date': targetDate?.toIso8601String(),
       'name': name,
       'full_name': fullName,
       'category': category,
@@ -75,6 +86,7 @@ class Exam {
       'exam_format': examFormat,
       'subjects': _toJson(subjects.map((s) => s.toMap()).toList()),
       'tags': _toJson(tags),
+      'logo_asset_path': logoAssetPath,
     };
   }
 
@@ -82,42 +94,17 @@ class Exam {
   Map<String, dynamic> toJson() => toMap();
 
   static List<String> _parseList(dynamic value) {
-    if (value == null) return [];
-    if (value is List) return value.cast<String>();
     if (value is String) {
       try {
-        final decoded = value;
-        // 处理JSON字符串
-        if (decoded.startsWith('[')) {
-          return (RegExp(r'"([^"]*)"')
-                  .allMatches(decoded)
-                  .map((m) => m.group(1)!)
-                  .toList());
-        }
-        return [decoded];
-      } catch (_) {
-        return [value.toString()];
+        value = jsonDecode(value);
+      } on FormatException {
+        return value.isEmpty ? [] : [value];
       }
     }
-    return [];
+    return value is List ? value.whereType<String>().toList() : [];
   }
 
-  static String _toJson(dynamic value) {
-    if (value is List) {
-      return value.map((e) {
-        if (e is String) return '"$e"';
-        if (e is Map) return _mapToString(Map<String, dynamic>.from(e));
-        return e.toString();
-      }).join(',');
-    }
-    return value.toString();
-  }
-
-  static String _mapToString(Map<String, dynamic> map) {
-    final entries =
-        map.entries.map((e) => '"${e.key}":"${e.value}"').join(',');
-    return '{$entries}';
-  }
+  static String _toJson(dynamic value) => jsonEncode(value);
 
   /// 获取难度星级文本
   String get difficultyStars => '⭐' * difficulty;
@@ -151,46 +138,23 @@ class ExamSubject {
   }
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'format': format,
-        'duration': duration,
-      };
+    'name': name,
+    'format': format,
+    'duration': duration,
+  };
 
   static List<ExamSubject> fromJsonList(dynamic value) {
-    if (value == null) return [];
-    if (value is List) {
-      return value
-          .map((e) => ExamSubject.fromMap(e is Map<String, dynamic> ? e : {}))
-          .toList();
-    }
-    if (value is String && value.startsWith('[')) {
-      // 尝试解析JSON字符串
+    if (value is String) {
       try {
-        return _parseSubjectsString(value);
-      } catch (_) {
+        value = jsonDecode(value);
+      } on FormatException {
         return [];
       }
     }
-    return [];
-  }
-
-  static List<ExamSubject> _parseSubjectsString(String json) {
-    // 简化版JSON数组解析，避免依赖dart:convert在模型层的复杂性
-    final result = <ExamSubject>[];
-    final matches = RegExp(r'\{[^}]+\}').allMatches(json);
-    for (final match in matches) {
-      final obj = match.group(0)!;
-      final nameMatch = RegExp(r'"name"\s*:\s*"([^"]*)"').firstMatch(obj);
-      final formatMatch = RegExp(r'"format"\s*:\s*"([^"]*)"').firstMatch(obj);
-      final durMatch = RegExp(r'"duration"\s*:\s*(\d+)').firstMatch(obj);
-      if (nameMatch != null) {
-        result.add(ExamSubject(
-          name: nameMatch.group(1)!,
-          format: formatMatch?.group(1) ?? '笔试',
-          duration: int.tryParse(durMatch?.group(1) ?? '120') ?? 120,
-        ));
-      }
-    }
-    return result;
+    if (value is! List) return [];
+    return value
+        .whereType<Map<String, dynamic>>()
+        .map(ExamSubject.fromMap)
+        .toList();
   }
 }

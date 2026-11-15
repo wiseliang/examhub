@@ -1,30 +1,185 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:examhub/app.dart';
+import 'package:examhub/widgets/ui_kit.dart';
+import 'package:examhub/database/database_helper.dart';
+import 'package:examhub/models/exam_session.dart';
+import 'package:examhub/models/exam_timeline.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:examhub/main.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
+  final helper = DatabaseHelper();
+  late Directory directory;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUpAll(() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfiNoIsolate;
+    directory = await Directory.systemTemp.createTemp('examhub-test-');
+    await databaseFactory.setDatabasesPath(directory.path);
+    await helper.database;
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  tearDownAll(() async {
+    await helper.close();
+    await directory.delete(recursive: true);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  setUp(() async {
+    final db = await helper.database;
+    await db.delete('exam', where: "origin = 'custom'");
+    for (final table in ['local_follow', 'local_bookmark', 'browse_history']) {
+      await db.delete(table);
+    }
+  });
+
+  test('初始化和并发读取保留全部 40 个考试及 CPA 科目', () async {
+    await helper.close();
+    final connections = await Future.wait(
+      List.generate(3, (_) => helper.database),
+    );
+    expect(connections.every((db) => identical(db, connections.first)), isTrue);
+    final exams = await helper.getAllExams();
+    expect(exams, hasLength(40));
+    final cpa = await helper.getExamById(1);
+    expect(cpa!.subjects, hasLength(7));
+    expect(cpa.targetGroups, contains('应届'));
+    expect(await helper.searchExams('CPA'), hasLength(1));
+    final filtered = await helper.filterExams(
+      industry: '法律',
+      targetGroup: '应届',
+    );
+    expect(filtered, isNotEmpty);
+    expect(
+      filtered.every(
+        (exam) => exam.industry == '法律' && exam.targetGroups.contains('应届'),
+      ),
+      isTrue,
+    );
+  });
+
+  test('关注、收藏去重，取消后移除；清空历史不影响其他记录', () async {
+    await helper.followExam(1);
+    await helper.followExam(1);
+    await helper.bookmarkExam(1);
+    await helper.bookmarkExam(1);
+    await helper.recordBrowse(1);
+    await helper.recordBrowse(1);
+    expect(await helper.getFollowedExams(), hasLength(1));
+    expect(await helper.getBookmarkedExams(), hasLength(1));
+    expect(await helper.getBrowseHistory(), hasLength(1));
+    await helper.close();
+    expect(await helper.getFollowedExams(), hasLength(1));
+    expect(await helper.getBookmarkedExams(), hasLength(1));
+    expect(await helper.getAllExams(), hasLength(40));
+    await helper.clearBrowseHistory();
+    expect(await helper.getBrowseHistory(), isEmpty);
+    expect(await helper.isFollowing(1), isTrue);
+    expect(await helper.isBookmarked(1), isTrue);
+    await helper.unfollowExam(1);
+    await helper.unbookmarkExam(1);
+    expect(await helper.getFollowedExams(), isEmpty);
+    expect(await helper.getBookmarkedExams(), isEmpty);
+  });
+
+  test('近期节点包含今天和截止当天，排除过去及超出范围的日期', () async {
+    final db = await helper.database;
+    const dates = [
+      '2030-06-09',
+      '2030-06-10',
+      '2030-06-12T00:00:00.000',
+      '2030-06-13',
+    ];
+    final session = ExamSession(
+      examId: 1,
+      year: 2030,
+      region: '测试地区',
+      status: 'confirmed',
+      sourceUrl: 'https://example.com/notice',
+      verifiedAt: DateTime(2030),
+    );
+    final id = await helper.saveSession(
+      session,
+      dates
+          .map(
+            (date) => ExamTimeline(
+              examId: 1,
+              eventType: 'exam',
+              periodDesc: '测试',
+              date: DateTime.parse(date),
+              isEstimated: false,
+              status: 'confirmed',
+              sourceUrl: 'https://example.com/notice',
+              verifiedAt: DateTime(2030),
+            ),
+          )
+          .toList(),
+    );
+    try {
+      final events = await helper.getUpcomingEvents(
+        days: 2,
+        from: DateTime(2030, 6, 10, 23, 59),
+      );
+      expect(
+        events.map((event) => DateTime.parse(event['date'] as String).day),
+        [10, 12],
+      );
+    } finally {
+      await db.delete('exam_session', where: 'id = ?', whereArgs: [id]);
+    }
+  });
+
+  testWidgets('实际 App 可浏览首页、搜索 CPA 并进入包含科目的详情', (tester) async {
+    await tester.pumpWidget(const ExamHubApp());
+    await tester.pumpAndSettle();
+    expect(find.text('考试通'), findsOneWidget);
+    expect(find.text('让助手帮我备考'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.search_rounded).first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'CPA');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CPA').first);
+    await tester.pumpAndSettle();
+    expect(find.text('概览'), findsOneWidget);
+    expect(find.text('关注考试'), findsOneWidget);
+    await tester.tap(find.text('关注考试'));
+    await tester.pumpAndSettle();
+    expect(await helper.isFollowing(1), isTrue);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('我的').last);
+    await tester.pumpAndSettle();
+    expect(find.text('关注的考试'), findsOneWidget);
+    expect(find.text('CPA'), findsWidgets);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+  testWidgets('详情可切换年份地区批次，旧资料明确标为参考', (tester) async {
+    await tester.pumpWidget(const ExamHubApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.search_rounded).first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'CPA');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CPA').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('考试安排'));
+    await tester.pumpAndSettle();
+    final selector = find.byType(DropdownButtonFormField<int>);
+    await tester.ensureVisible(selector);
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(StatePill, '往年规律参考'), findsOneWidget);
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('年份待公布'), findsWidgets);
+    await tester.tap(find.textContaining('旧版参考').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('往年资料仅供参考'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 }

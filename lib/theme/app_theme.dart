@@ -1,265 +1,180 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
-/// App主题配置 - 内容丰富型（参考小红书+知乎风格）
 class AppTheme {
-  // ==================== 配色方案 ====================
-
-  /// 主色 - 深蓝（专业/信任感）
-  static const Color primaryColor = Color(0xFF1A5276);
-
-  /// 主色浅变体
-  static const Color primaryLight = Color(0xFF2980B9);
-
-  /// 强调色 - 暖橙金（用于星级/标签/CTA按钮）
-  static const Color accentColor = Color(0xFFF39C12);
-
-  /// 成功色
-  static const Color successColor = Color(0xFF27AE60);
-
-  /// 警告色
-  static const Color warningColor = Color(0xFFE74C3C);
-
-  /// 背景色
-  static const Color backgroundColor = Color(0xFFF5F6FA);
-
-  /// 卡片背景
-  static const Color cardColor = Colors.white;
-
-  /// 主文字色
-  static const Color textPrimary = Color(0xFF2C3E50);
-
-  /// 次文字色
-  static const Color textSecondary = Color(0xFF7F8C8D);
-
-  /// 浅灰文字
-  static const Color textLight = Color(0xFFBDC3C7);
-
-  /// 分割线
-  static const Color dividerColor = Color(0xFFECF0F1);
-
-  // ==================== 分类颜色映射 ====================
-
-  static const Map<String, Color> categoryColors = {
-    '准入类': Color(0xFFE74C3C),       // 红色（重要）
-    '水平评价类': Color(0xFF2980B9),    // 蓝色
-    '国际认证': Color(0xFF8E44AD),      // 紫色
-    '企业认证': Color(0xFF27AE60),      // 绿色
-    '技能等级认定': Color(0xFFF39C12),  // 橙色
-  };
-
-  static const Map<String, Color> industryColors = {
-    '财会金融': Color(0xFFE74C3C),
-    '法律': Color(0xFF8E44AD),
-    '建筑地产': Color(0xFFD35400),
-    '医疗健康': Color(0xFF27AE60),
-    '教育培训': Color(0xFF2980B9),
-    'IT互联网': Color(0xFF3498DB),
-    '公共管理': Color(0xFF16A085),
-  };
-
-  /// 获取分类颜色
-  static Color getCategoryColor(String category) {
-    return categoryColors[category] ?? primaryColor;
-  }
-
-  /// 获取行业颜色
-  static Color getIndustryColor(String industry) {
-    return industryColors[industry] ?? primaryColor;
-  }
-
-  // ==================== 文本样式 ====================
-
-  static const TextStyle heading1 = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
+  static const primaryColor = Color(0xFF254FD5);
+  static const primaryLight = Color(0xFFEEF2FF);
+  static const accentColor = Color(0xFF254FD5);
+  static const successColor = Color(0xFF117C6F);
+  static const warningColor = Color(0xFF8C5A12);
+  static const backgroundColor = Color(0xFFF3F6FC);
+  static const cardColor = Colors.white;
+  static const textPrimary = Color(0xFF17213A);
+  static const textSecondary = Color(0xFF52617E);
+  static const textLight = Color(0xFF65708A);
+  static const dividerColor = Color(0xFFE1E7F2);
+  static const spacingXs = 4.0,
+      spacingSm = 8.0,
+      spacingMd = 20.0,
+      spacingLg = 28.0,
+      spacingXl = 36.0;
+  static const radiusSm = 8.0,
+      radiusMd = 14.0,
+      radiusLg = 20.0,
+      radiusXl = 28.0;
+  static const heading1 = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 30,
+    fontWeight: FontWeight.w800,
     color: textPrimary,
-    height: 1.3,
+    height: 1.25,
   );
-
-  static const TextStyle heading2 = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
+  static const heading2 = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
     color: textPrimary,
-    height: 1.3,
+    height: 1.35,
   );
-
-  static const TextStyle heading3 = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
+  static const heading3 = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 17,
+    fontWeight: FontWeight.w700,
     color: textPrimary,
     height: 1.4,
   );
-
-  static const TextStyle bodyLarge = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.normal,
+  static const bodyLarge = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 17,
     color: textPrimary,
     height: 1.6,
   );
-
-  static const TextStyle body = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.normal,
+  static const body = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 15,
     color: textPrimary,
+    height: 1.6,
+  );
+  static const bodySmall = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 13,
+    color: textSecondary,
+    height: 1.55,
+  );
+  static const caption = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
+    fontSize: 12,
+    color: textSecondary,
     height: 1.5,
   );
-
-  static const TextStyle bodySmall = TextStyle(
+  static const tagStyle = TextStyle(
+    fontFamily: 'Noto Sans CJK SC',
     fontSize: 12,
-    fontWeight: FontWeight.normal,
-    color: textSecondary,
-    height: 1.4,
-  );
-
-  static const TextStyle caption = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.normal,
-    color: textLight,
-    height: 1.3,
-  );
-
-  static const TextStyle tagStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w600,
     color: primaryColor,
-    height: 1.0,
   );
+  static const List<BoxShadow> cardShadow = [];
+  static const List<BoxShadow> elevatedShadow = [];
+  static Color getCategoryColor(String category) => primaryColor;
+  static Color getIndustryColor(String industry) => primaryColor;
 
-  // ==================== 间距 ====================
-
-  static const double spacingXs = 4.0;
-  static const double spacingSm = 8.0;
-  static const double spacingMd = 16.0;
-  static const double spacingLg = 24.0;
-  static const double spacingXl = 32.0;
-
-  // ==================== 圆角 ====================
-
-  static const double radiusSm = 6.0;
-  static const double radiusMd = 12.0;
-  static const double radiusLg = 16.0;
-  static const double radiusXl = 24.0;
-
-  // ==================== 阴影 ====================
-
-  static List<BoxShadow> cardShadow = [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.06),
-      blurRadius: 8,
-      offset: const Offset(0, 2),
+  static ThemeData get lightTheme => ThemeData(
+    useMaterial3: true,
+    fontFamily: 'Noto Sans CJK SC',
+    fontFamilyFallback: const ['sans-serif'],
+    scaffoldBackgroundColor: backgroundColor,
+    colorScheme: const ColorScheme.light(
+      primary: primaryColor,
+      secondary: successColor,
+      surface: cardColor,
+      onSurface: textPrimary,
+      error: Color(0xFFB3261E),
     ),
-  ];
-
-  static List<BoxShadow> elevatedShadow = [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.1),
-      blurRadius: 16,
-      offset: const Offset(0, 4),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: backgroundColor,
+      foregroundColor: textPrimary,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleTextStyle: heading3,
     ),
-  ];
-
-  // ==================== App主题 ====================
-
-  static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      primaryColor: primaryColor,
-      scaffoldBackgroundColor: backgroundColor,
-      colorScheme: const ColorScheme.light(
-        primary: primaryColor,
-        onPrimary: Colors.white,
-        secondary: accentColor,
-        surface: cardColor,
-        error: warningColor,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: textPrimary,
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle: TextStyle(
-          color: textPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+    textTheme: const TextTheme(
+      bodyMedium: body,
+      bodySmall: bodySmall,
+      titleMedium: heading3,
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: Colors.white,
+      indicatorColor: primaryLight,
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          fontFamily: 'Noto Sans CJK SC',
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+          color: states.contains(WidgetState.selected)
+              ? primaryColor
+              : textSecondary,
         ),
       ),
-      cardTheme: CardThemeData(
-        color: cardColor,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
-        ),
-        margin: const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingSm),
-      ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textLight,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 11),
-      ),
-      chipTheme: ChipThemeData(
-        backgroundColor: backgroundColor,
-        selectedColor: primaryColor.withValues(alpha: 0.1),
-        labelStyle: const TextStyle(fontSize: 12, color: primaryColor),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: backgroundColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
-          borderSide: BorderSide.none,
-        ),
-        hintStyle: const TextStyle(color: textLight, fontSize: 14),
-      ),
-      dividerTheme: const DividerThemeData(
-        color: dividerColor,
-        thickness: 1,
-        space: 1,
-      ),
-    );
-  }
-
-  static ThemeData get darkTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      primaryColor: primaryLight,
-      scaffoldBackgroundColor: const Color(0xFF1A1A2E),
-      colorScheme: const ColorScheme.dark(
-        primary: primaryLight,
-        onPrimary: Colors.white,
-        secondary: accentColor,
-        surface: Color(0xFF16213E),
-        error: warningColor,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF16213E),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      cardTheme: CardThemeData(
-        color: const Color(0xFF16213E),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
-        ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        minimumSize: const Size(48, 48),
+        side: const BorderSide(color: dividerColor),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xFF16213E),
-        selectedItemColor: primaryLight,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: dividerColor),
       ),
-    );
-  }
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: dividerColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+      hintStyle: bodySmall,
+    ),
+    iconTheme: const IconThemeData(color: textSecondary),
+    chipTheme: ChipThemeData(
+      backgroundColor: Colors.white,
+      selectedColor: primaryLight,
+      secondarySelectedColor: primaryLight,
+      showCheckmark: false,
+      side: const BorderSide(color: dividerColor),
+      labelStyle: bodySmall,
+      secondaryLabelStyle: bodySmall.copyWith(
+        color: primaryColor,
+        fontWeight: FontWeight.w700,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+    tabBarTheme: const TabBarThemeData(dividerColor: dividerColor),
+    dividerTheme: const DividerThemeData(
+      color: dividerColor,
+      thickness: 1,
+      space: 1,
+    ),
+  );
+  static ThemeData get darkTheme => lightTheme;
 }

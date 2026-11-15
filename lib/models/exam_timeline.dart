@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 /// 考试时间节点模型
 class ExamTimeline {
   final int? id;
   final int examId;
+  final int? sessionId;
+  final String status;
+  final DateTime? verifiedAt;
   final String eventType; // 报名开始/报名截止/准考证打印/考试/出成绩
   final String periodDesc; // "每年6月" 或 "上半年/下半年"
   final DateTime? date; // 具体日期(如已知)
@@ -11,6 +16,9 @@ class ExamTimeline {
   const ExamTimeline({
     this.id,
     required this.examId,
+    this.sessionId,
+    this.status = 'estimated',
+    this.verifiedAt,
     required this.eventType,
     required this.periodDesc,
     this.date,
@@ -21,6 +29,9 @@ class ExamTimeline {
   factory ExamTimeline.fromMap(Map<String, dynamic> map) {
     return ExamTimeline(
       id: map['id'] as int?,
+      sessionId: map['session_id'] as int?,
+      status: map['status'] as String? ?? 'estimated',
+      verifiedAt: DateTime.tryParse(map['verified_at'] as String? ?? ''),
       examId: map['exam_id'] as int,
       eventType: map['event_type'] as String,
       periodDesc: map['period_desc'] as String,
@@ -34,6 +45,9 @@ class ExamTimeline {
     return {
       if (id != null) 'id': id,
       'exam_id': examId,
+      'session_id': sessionId,
+      'status': status,
+      'verified_at': verifiedAt?.toIso8601String(),
       'event_type': eventType,
       'period_desc': periodDesc,
       'date': date?.toIso8601String(),
@@ -81,7 +95,9 @@ class ExamTimeline {
   /// 离今天还有多少天（预估）
   int daysUntil(DateTime from) {
     if (date == null) return -1;
-    return date!.difference(from).inDays;
+    final target = DateTime.utc(date!.year, date!.month, date!.day);
+    final today = DateTime.utc(from.year, from.month, from.day);
+    return target.difference(today).inDays;
   }
 }
 
@@ -140,11 +156,17 @@ class NoticeKeyPoint {
   Map<String, dynamic> toMap() => {'type': type, 'content': content};
 
   static List<NoticeKeyPoint> fromJsonList(dynamic value) {
-    if (value == null) return [];
+    if (value is String) {
+      try {
+        value = jsonDecode(value);
+      } on FormatException {
+        return [];
+      }
+    }
     if (value is List) {
       return value
-          .map((e) =>
-              NoticeKeyPoint.fromMap(e is Map<String, dynamic> ? e : {}))
+          .whereType<Map<String, dynamic>>()
+          .map(NoticeKeyPoint.fromMap)
           .toList();
     }
     return [];

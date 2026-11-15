@@ -1,0 +1,20 @@
+[Unit]
+Description=ExamHub research assistant
+After=network-online.target
+
+[Service]
+Type=simple
+# 按实际部署身份修改；该身份必须已经合法登录 Codex 并拥有联网搜索权限。
+User=examhub
+WorkingDirectory=/opt/examhub/server
+EnvironmentFile=/etc/examhub/assistant.env
+ExecStart=/usr/bin/node /opt/examhub/server/index.mjs
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=15
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

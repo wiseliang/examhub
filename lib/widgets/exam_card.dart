@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
 
@@ -97,7 +98,11 @@ class ExamCard extends StatelessWidget {
                         // 星级
                         Row(
                           children: [
-                            _buildStars(exam.goldContent, color: AppTheme.accentColor, size: 14),
+                            _buildStars(
+                              exam.goldContent,
+                              color: AppTheme.accentColor,
+                              size: 14,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${exam.goldContent}',
@@ -108,8 +113,11 @@ class ExamCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Icon(Icons.signal_cellular_alt,
-                                size: 14, color: AppTheme.textLight),
+                            const Icon(
+                              Icons.signal_cellular_alt,
+                              size: 14,
+                              color: AppTheme.textLight,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               '难度${exam.difficulty}/5',
@@ -197,8 +205,11 @@ class ExamCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStars(double rating,
-      {Color color = AppTheme.accentColor, double size = 14}) {
+  Widget _buildStars(
+    double rating, {
+    Color color = AppTheme.accentColor,
+    double size = 14,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
@@ -243,28 +254,35 @@ class ExamCardCompact extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(exam.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary,
-                          )),
+                      Text(
+                        exam.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: List.generate(
                           exam.goldContent.floor(),
-                          (_) => const Icon(Icons.star,
-                              size: 13, color: AppTheme.accentColor),
+                          (_) => const Icon(
+                            Icons.star,
+                            size: 13,
+                            color: AppTheme.accentColor,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(exam.organizingBody,
-                      style: AppTheme.caption,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    exam.organizingBody,
+                    style: AppTheme.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),

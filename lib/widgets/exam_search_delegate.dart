@@ -1,176 +1,109 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../database/database_helper.dart';
 import '../models/exam.dart';
+import '../screens/custom_exam_screen.dart';
 import '../theme/app_theme.dart';
+import 'ui_kit.dart';
 
-/// 考试搜索代理
 class ExamSearchDelegate extends SearchDelegate<Exam?> {
-  final DatabaseHelper _db = DatabaseHelper();
-
   @override
-  String get searchFieldLabel => '搜索考试/行业/主办单位...';
-
+  String get searchFieldLabel => '搜索考试名称、行业';
   @override
-  ThemeData appBarTheme(BuildContext context) {
-    return Theme.of(context).copyWith(
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: AppTheme.textPrimary,
-        elevation: 0,
+  List<Widget> buildActions(BuildContext context) => [
+    if (query.isNotEmpty)
+      IconButton(
+        tooltip: '清除搜索',
+        icon: const Icon(Icons.close_rounded),
+        onPressed: () => query = '',
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppTheme.backgroundColor,
-        hintStyle: const TextStyle(color: AppTheme.textLight, fontSize: 14),
-      ),
-    );
-  }
-
+  ];
   @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      if (query.isNotEmpty)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () => query = '',
-        ),
-    ];
-  }
-
+  Widget buildLeading(BuildContext context) => IconButton(
+    tooltip: '返回',
+    icon: const Icon(Icons.arrow_back_rounded),
+    onPressed: () => close(context, null),
+  );
   @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () => close(context, null),
-    );
-  }
-
+  Widget buildResults(BuildContext context) => _results(context);
   @override
-  Widget buildResults(BuildContext context) {
-    return _buildSearchResults(context);
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults(context);
-  }
-
-  Widget _buildSearchResults(BuildContext context) {
+  Widget buildSuggestions(BuildContext context) => _results(context);
+  Widget _results(BuildContext context) {
     if (query.trim().isEmpty) {
-      return _buildTips(context);
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('从一个方向开始', style: AppTheme.heading2),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: ['教师', '会计', '法律', '计算机']
+                  .map(
+                    (word) => ActionChip(
+                      label: Text(word),
+                      onPressed: () {
+                        query = word;
+                        showResults(context);
+                      },
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
+      );
     }
-
     return FutureBuilder<List<Exam>>(
-      future: _db.searchExams(query.trim()),
+      future: DatabaseHelper().searchExams(query.trim()),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('搜索出错: ${snapshot.error}'));
+          return const Center(child: Text('搜索未完成，请重新输入后再试。'));
         }
-        final results = snapshot.data ?? [];
-        if (results.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.search_off, size: 48, color: AppTheme.textLight),
-                const SizedBox(height: 12),
-                Text('未找到"$query"相关考试',
-                    style: const TextStyle(color: AppTheme.textSecondary)),
-                const SizedBox(height: 8),
-                Text('请尝试其他关键词搜索',
-                    style: AppTheme.caption),
-              ],
-            ),
+        final exams = snapshot.data ?? [];
+        if (exams.isEmpty) {
+          return ListView(
+            padding: const EdgeInsets.only(top: 28),
+            children: [
+              EmptyPanel(
+                title: '没有找到“${query.trim()}”',
+                message: '把它加入自己的考试列表，继续准备。',
+                action: '添加这个考试',
+                onTap: () async {
+                  final id = await Navigator.push<int>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          CustomExamScreen(initialName: query.trim()),
+                    ),
+                  );
+                  if (id != null && context.mounted) {
+                    final exam = await DatabaseHelper().getExamById(id);
+                    if (context.mounted) close(context, exam);
+                  }
+                },
+                icon: Icons.search_off_rounded,
+              ),
+            ],
           );
         }
-
         return ListView.separated(
-          itemCount: results.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1, indent: 72, endIndent: 16),
-          itemBuilder: (context, index) {
-            final exam = results[index];
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacingMd, vertical: 4),
-              leading: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.getIndustryColor(exam.industry)
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  exam.name.length > 3
-                      ? exam.name.substring(0, 3)
-                      : exam.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: exam.name.length > 3 ? 10 : 13,
-                    color: AppTheme.getIndustryColor(exam.industry),
-                  ),
-                ),
-              ),
-              title: Text(exam.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(exam.organizingBody,
-                  style: AppTheme.caption, maxLines: 1),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.star, size: 14, color: AppTheme.accentColor),
-                  const SizedBox(width: 2),
-                  Text('${exam.goldContent}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary)),
-                ],
-              ),
-              onTap: () => close(context, exam),
-            );
-          },
+          itemCount: exams.length,
+          separatorBuilder: (_, _) => const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Divider(),
+          ),
+          itemBuilder: (context, index) => ExamRow(
+            exam: exams[index],
+            onTap: () => close(context, exams[index]),
+          ),
         );
       },
-    );
-  }
-
-  Widget _buildTips(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('💡 试试搜索', style: AppTheme.body.copyWith(
-            fontWeight: FontWeight.w600,
-          )),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              'CPA', '法考', '建造师', 'CFA', '会计',
-              '建筑', '金融', 'IT', '法律', '医疗',
-            ].map((keyword) => ActionChip(
-                  label: Text(keyword),
-                  onPressed: () {
-                    query = keyword;
-                    showResults(context);
-                  },
-                )).toList(),
-          ),
-          const SizedBox(height: 24),
-          Text('热门搜索', style: AppTheme.body.copyWith(
-            fontWeight: FontWeight.w600,
-          )),
-          const SizedBox(height: 8),
-          Text('教师资格证 · 注册会计师 · 一级建造师 · PMP',
-              style: AppTheme.caption),
-        ],
-      ),
     );
   }
 }
