@@ -204,7 +204,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
     if (bank == null) return;
     await Clipboard.setData(ClipboardData(text: bank['title'] as String));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已复制题库名称，请在掌心刷题中确认账号并选择对应题库。')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已复制题库名称，请在掌心刷题中确认账号并选择对应题库。')),
+    );
     await ExternalActions.practice(context);
   }
 
@@ -230,10 +232,15 @@ class _AssistantScreenState extends State<AssistantScreen> {
         trailing: const Icon(Icons.chevron_right),
         onTap: _choosePalm,
       ),
-      if (_document?['palmBank'] != null) Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton.icon(onPressed: _practicePalm, icon: const Icon(Icons.open_in_new), label: const Text('复制题库名并打开掌心刷题')),
-      ),
+      if (_document?['palmBank'] != null)
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _practicePalm,
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('复制题库名并打开掌心刷题'),
+          ),
+        ),
     ],
   );
 

@@ -150,20 +150,55 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final client = PalmQuizClient(transport: (method, path, body, token) async {
-      if (path == '/login') return {'token': 'demo-session', 'user': {'id': 'demo-user', 'username': '演示账号'}};
-      return [
-        {'id': 'demo-bank-1', 'title': '二级 Python 官方样题整理（演示）', 'count': 24, 'shared': 0},
-        {'id': 'demo-bank-2', 'title': 'Python 基础练习（演示）', 'count': 18, 'shared': 1},
-      ];
-    });
+    final client = PalmQuizClient(
+      transport: (method, path, body, token) async {
+        if (path == '/login') {
+          return {
+            'token': 'demo-session',
+            'user': {'id': 'demo-user', 'username': '演示账号'},
+          };
+        }
+        return [
+          {
+            'id': 'demo-bank-1',
+            'title': '二级 Python 官方样题整理（演示）',
+            'count': 24,
+            'shared': 0,
+          },
+          {
+            'id': 'demo-bank-2',
+            'title': 'Python 基础练习（演示）',
+            'count': 18,
+            'shared': 1,
+          },
+        ];
+      },
+    );
     final key = GlobalKey();
-    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(debugShowCheckedModeBanner: false, theme: AppTheme.lightTheme, home: PalmQuizScreen(exam: '全国计算机等级考试二级 Python', client: client))));
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: PalmQuizScreen(exam: '全国计算机等级考试二级 Python', client: client),
+        ),
+      ),
+    );
     await capture(tester, key, '掌心题库登录');
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
     await client.login('demo', 'demo-password');
-    await tester.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(debugShowCheckedModeBanner: false, theme: AppTheme.lightTheme, home: PalmQuizScreen(exam: '全国计算机等级考试二级 Python', client: client))));
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: PalmQuizScreen(exam: '全国计算机等级考试二级 Python', client: client),
+        ),
+      ),
+    );
     await capture(tester, key, '掌心题库授权列表_演示');
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
